@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { supabase } from '../../lib/supabase'
 
 const CITIES = ['Pune', 'Mumbai']
-const PUNE_AREAS = ['Bhosari MIDC', 'Pimpri Chinchwad', 'Chakan', 'Ranjangaon', 'Hadapsar', 'Kharadi', 'Talegaon', 'Other']
+const PUNE_AREAS = ['Bhosari MIDC', 'Pimpri Chinchwad', 'Chakan', 'Ranjangaon', 'Hadapsar', 'Kharadi', 'Talegaon', 'Baner', 'Other']
 const TYPES = ['Warehouse', 'Factory', 'Shed', 'Showroom', 'Plot', 'Cold Storage', 'Office']
 const PRICE_TYPES = ['monthly', 'yearly', 'negotiable']
 
