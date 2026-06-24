@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase'
 
 const CITIES = ['Pune', 'Mumbai']
 const TYPES = ['All Types', 'Warehouse', 'Factory', 'Shed', 'Showroom', 'Plot', 'Cold Storage', 'Office']
-const PUNE_AREAS = ['All Areas', 'Bhosari MIDC', 'Pimpri Chinchwad', 'Chakan', 'Ranjangaon', 'Hadapsar', 'Kharadi', 'Talegaon']
+const PUNE_AREAS = ['All Areas', 'Bhosari MIDC', 'Pimpri Chinchwad', 'Chakan', 'Ranjangaon', 'Hadapsar', 'Kharadi', 'Talegaon', 'Baner']
 
 export default function HomePage() {
   const [listings, setListings] = useState([])
