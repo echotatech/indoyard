@@ -44,7 +44,7 @@ export default function HomePage() {
           Indo<span style={{ color: '#16a370' }}>yard</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <span style={{ fontSize: 13, color: '#666' }}>📞 +91 98765 00000</span>
+          <span style={{ fontSize: 13, color: '#666' }}>📞 +305 434 4628</span>
           <Link href="/post-property" style={{ background: '#16a370', color: '#fff', padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>+ Post Property</Link>
         </div>
       </header>
