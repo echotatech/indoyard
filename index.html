@@ -716,12 +716,11 @@ function verifyHTML(scope){
     <p class="cmeta" style="margin:0">We email you a 6-digit code. No password needed.</p>
     <label class="field" style="max-width:360px"><span>Email</span><input id="${scope}-vemail" type="email" autocomplete="email" value="${esc(o?o.email:contact.email)}"></label>
     <p class="err">${esc(o&&o.err||"")}</p>
-    <div><button type="button" class="btn" data-act="code-send" data-scope="${scope}" ${o&&o.busy?"disabled":""}>${o&&o.busy?"Sending…":"Email me a code"}</button></div></div>`;
-  return `<div class="vbox"><h3>Enter the code we emailed to ${esc(o.email)}</h3>
-    ${o.demoCode?`<div class="demo">Preview mode: email isn't connected, so the code is shown here: <b class="num">${esc(o.demoCode)}</b></div>`:`<p class="cmeta" style="margin:0">Check your inbox and spam folder. The code expires in about an hour.</p>`}
-    <label class="field" style="max-width:220px"><span>6-digit code</span><input id="${scope}-vcode" inputmode="numeric" maxlength="6" autocomplete="one-time-code"></label>
+    <div><button type="button" class="btn" data-act="code-send" data-scope="${scope}" ${o&&o.busy?"disabled":""}>${o&&o.busy?"Sending…":"Email me a sign-in link"}</button></div></div>`;
+  return `<div class="vbox"><h3>Check your email</h3>
+    <p class="cmeta" style="margin:0">We emailed a sign-in link to <b>${esc(o.email)}</b>. Please check your email and click the link to sign in. If you don't see it, check your spam folder.</p>
     <p class="err">${esc(o.err||"")}</p>
-    <div class="formfoot"><button type="button" class="btn" data-act="code-check" data-scope="${scope}" ${o.busy?"disabled":""}>Verify</button>
+    <div class="formfoot"><button type="button" class="btn" data-act="code-send" data-scope="${scope}" ${o.busy?"disabled":""}>Send the link again</button>
     <button type="button" class="linkbtn" data-act="code-change" data-scope="${scope}">Use a different email</button></div></div>`;
 }
 function refreshVerify(){const el=$("verify-ad");if(el)el.innerHTML=verifyHTML("ad")}
