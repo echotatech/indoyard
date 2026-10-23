@@ -1,0 +1,947 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Indoyards</title>
+<meta name="description" content="Indoyards: properties at discount in Pune. Mehenga Ghar, Saste Daam!">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+/* Layout: sticky header (brand + tagline | phone + post buttons), filter bar, property list (left) + details (right); forms and admin are separate views */
+:root{
+  --bg:#F3F5F1; --surface:#FFFFFF; --sunk:#E9ECE6; --line:#D8DDD5; --fg:#15201C; --muted:#52605A;
+  --accent:#0B6E66; --accent-hover:#085953; --accent-ink:#FFFFFF; --accent-soft:#E0F0EC;
+  --deal:#C2410C; --deal-ink:#FFFFFF; --sun:#FFE9A8; --sun-ink:#4D3600;
+  --ok:#15803D; --ok-soft:#E3F4E8; --err:#B42318; --err-soft:#FDECEA;
+  --thumb-res:#DCE7F3; --thumb-com:#EEE4D4; --thumb-oth:#DFEDD6; --thumb-ink:#33413B;
+  --display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --body:"Figtree","Segoe UI",system-ui,-apple-system,sans-serif;
+  --hh:72px; color-scheme:light;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0E1412; --surface:#161F1C; --sunk:#1E2925; --line:#2B3732; --fg:#E6ECE9; --muted:#9BA9A3;
+  --accent:#3DB4A7; --accent-hover:#5CC6BA; --accent-ink:#04201C; --accent-soft:#15322E;
+  --deal:#F2804D; --deal-ink:#1C0B02; --sun:#3A2F12; --sun-ink:#F4DA8E;
+  --ok:#4ADE80; --ok-soft:#133022; --err:#F97066; --err-soft:#3A1715;
+  --thumb-res:#1D2B39; --thumb-com:#2E2920; --thumb-oth:#213020; --thumb-ink:#C9D4CF; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#0E1412; --surface:#161F1C; --sunk:#1E2925; --line:#2B3732; --fg:#E6ECE9; --muted:#9BA9A3;
+  --accent:#3DB4A7; --accent-hover:#5CC6BA; --accent-ink:#04201C; --accent-soft:#15322E;
+  --deal:#F2804D; --deal-ink:#1C0B02; --sun:#3A2F12; --sun-ink:#F4DA8E;
+  --ok:#4ADE80; --ok-soft:#133022; --err:#F97066; --err-soft:#3A1715;
+  --thumb-res:#1D2B39; --thumb-com:#2E2920; --thumb-oth:#213020; --thumb-ink:#C9D4CF; color-scheme:dark }
+
+*{box-sizing:border-box}
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+img,video{max-width:100%}
+[hidden]{display:none!important}
+.wrap{max-width:1280px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;letter-spacing:-0.01em}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;padding-block:12px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--fg)}
+.mark{width:40px;height:40px;border-radius:10px;background:var(--accent);display:grid;place-items:center;color:var(--accent-ink)}
+.brand b{font-family:var(--display);font-size:23px;font-weight:800;letter-spacing:-0.02em;line-height:1}
+.brand small{display:block;font-size:12px;color:var(--deal);font-weight:800;letter-spacing:.04em;text-transform:uppercase;margin-top:3px}
+.tagline{display:inline-flex;align-items:center;gap:6px;background:var(--sun);color:var(--sun-ink);font-family:var(--display);font-weight:800;font-size:15px;padding:6px 12px;border-radius:999px;transform:rotate(-1.5deg)}
+.spacer{flex:1 1 0}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.phoneline{display:flex;flex-direction:column;align-items:flex-end;line-height:1.2;text-decoration:none;color:var(--fg)}
+.phoneline span{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.phoneline b{font-size:17px;font-weight:800;color:var(--accent);display:flex;align-items:center;gap:6px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:10px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);font-weight:700;cursor:pointer;text-decoration:none}
+.btn:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
+.btn.ghost{background:var(--surface);color:var(--fg);border-color:var(--line)}
+.btn.ghost:hover{border-color:var(--muted)}
+.btn.deal{background:var(--deal);border-color:var(--deal);color:var(--deal-ink)}
+.btn.bad{background:var(--surface);color:var(--err);border-color:var(--err)}
+.btn.sm{min-height:36px;padding:0 12px;font-size:13px}
+.btn[disabled]{opacity:.55;cursor:not-allowed}
+.badge{background:var(--deal);color:var(--deal-ink);border-radius:999px;font-size:11px;font-weight:800;padding:1px 7px}
+.linkbtn{background:none;border:0;padding:0;color:var(--accent);font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+
+main{padding-block:18px 40px}
+section.view[hidden]{display:none}
+.demo-banner{background:var(--sun);color:var(--sun-ink);border-radius:12px;padding:10px 14px;font-size:13px;margin-bottom:14px}
+
+.filters{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
+.frow{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.seg{display:inline-flex;background:var(--sunk);border-radius:11px;padding:3px;gap:3px;flex-wrap:wrap}
+.seg button{border:0;background:none;min-height:38px;padding:0 16px;border-radius:9px;font-weight:700;color:var(--muted);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.chip{border:1px solid var(--line);background:var(--surface);min-height:38px;padding:0 14px;border-radius:999px;font-weight:600;font-size:14px;cursor:pointer;color:var(--fg)}
+.chip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.flabel{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.fsel{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1 1 150px}
+.fsel select{min-height:40px;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:0 10px;width:100%}
+.search{flex:2 1 260px;display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:0 10px;background:var(--surface)}
+.search input{border:0;padding:0;min-height:42px;outline:none;background:transparent;width:100%}
+.count{font-size:14px;color:var(--muted);font-weight:600;margin-left:auto}
+
+.split{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start}
+.listpane{flex:1 1 340px;max-width:440px;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.listhead{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:8px;font-weight:700;font-size:14px}
+.listhead span:last-child{color:var(--muted);font-weight:600}
+.cards{display:flex;flex-direction:column}
+.card{all:unset;box-sizing:border-box;display:flex;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);cursor:pointer;border-left:4px solid transparent;width:100%}
+.card:hover{background:var(--sunk)}
+.card[aria-pressed="true"]{background:var(--accent-soft);border-left-color:var(--accent)}
+.card:focus-visible{outline:3px solid var(--accent);outline-offset:-3px}
+.thumb{width:80px;height:80px;flex:none;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--thumb-ink);font-size:11px;font-weight:800;overflow:hidden}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.t-residential{background:var(--thumb-res)}.t-commercial{background:var(--thumb-com)}.t-other{background:var(--thumb-oth)}
+.cbody{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.ctop{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.ctitle{font-weight:700;line-height:1.3}
+.off{flex:none;background:var(--deal);color:var(--deal-ink);font-size:12px;font-weight:800;padding:2px 7px;border-radius:6px}
+.cmeta{font-size:13px;color:var(--muted)}
+.prices{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:baseline;margin-top:4px}
+.prices b{font-size:17px;color:var(--accent);font-weight:800}
+.prices s{font-size:13px;color:var(--muted)}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--sunk);color:var(--muted)}
+.tag.ok{background:var(--ok-soft);color:var(--ok)}
+.tag.hot{background:var(--sun);color:var(--sun-ink)}
+.tag.bad{background:var(--err-soft);color:var(--err)}
+.empty{padding:36px 20px;text-align:center;color:var(--muted);display:flex;flex-direction:column;gap:12px;align-items:center}
+
+.detail{flex:999 1 520px;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+@media (min-width:900px){
+  .listpane .cards{max-height:calc(100vh - var(--hh) - 260px);min-height:320px;overflow:auto}
+  .detail{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--hh) + 12px);max-height:calc(100vh - var(--hh) - 30px);overflow:auto}
+}
+@media (max-width:899px){.listpane{max-width:none}}
+.gallery{display:flex;flex-direction:column;gap:6px;padding:10px;background:var(--sunk)}
+.gmain{aspect-ratio:16/9;max-width:100%;width:100%;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;color:var(--thumb-ink);font-weight:700;font-size:13px}
+.gmain img{width:100%;height:100%;object-fit:cover}
+.gthumbs{display:flex;gap:6px;flex-wrap:wrap}
+.gthumbs button{all:unset;cursor:pointer;width:72px;height:54px;border-radius:8px;overflow:hidden;border:2px solid transparent}
+.gthumbs button[aria-pressed="true"]{border-color:var(--accent)}
+.gthumbs button:focus-visible{outline:3px solid var(--accent)}
+.gthumbs img{width:100%;height:100%;object-fit:cover;display:block}
+.dbody{padding:22px;display:flex;flex-direction:column;gap:20px}
+.dhead{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-start}
+.dhead h1{font-size:clamp(22px,2.6vw,28px);font-weight:800;line-height:1.2}
+.loc{color:var(--muted);display:flex;align-items:center;gap:6px;font-size:14px}
+.pricebox{background:var(--accent-soft);border-radius:14px;padding:14px 18px;display:flex;flex-direction:column;align-items:flex-end;gap:2px;min-width:0}
+.pricebox s{color:var(--muted);font-size:13px}
+.pricebox .big{font-family:var(--display);font-size:32px;font-weight:800;color:var(--accent);line-height:1.1}
+.pricebox .save{background:var(--deal);color:var(--deal-ink);font-weight:800;font-size:12px;padding:3px 9px;border-radius:6px;margin-top:4px}
+.ends{font-size:13px;font-weight:700;color:var(--deal)}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.fact{border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.fact span{font-size:12px;color:var(--muted);font-weight:600}
+.fact b{font-size:15px}
+.dsec{display:flex;flex-direction:column;gap:8px}
+.dsec h2{font-size:17px;font-weight:800}
+.dsec p{margin:0;max-width:68ch;white-space:pre-line}
+.dsec video{width:100%;border-radius:12px;background:#000;max-height:420px}
+.amen{display:flex;flex-wrap:wrap;gap:6px}
+.amen span{background:var(--sunk);padding:6px 11px;border-radius:8px;font-size:13px;font-weight:600}
+.privacy{display:flex;gap:10px;align-items:flex-start;background:var(--sunk);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--muted)}
+.privacy svg{flex:none;color:var(--accent);margin-top:1px}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:18px;max-width:900px}
+.panel h2{font-size:24px;font-weight:800}
+.lead{color:var(--muted);margin:0;max-width:70ch}
+fieldset{border:1px solid var(--line);border-radius:14px;padding:16px;margin:0;display:flex;flex-direction:column;gap:14px;min-width:0}
+legend{font-weight:800;font-family:var(--display);font-size:17px;padding:0 6px}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field > span{font-size:13px;font-weight:700}
+.field small{color:var(--muted);font-size:12px}
+.field input,.field select,.field textarea{min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:8px 12px;width:100%}
+.field textarea{min-height:100px;resize:vertical}
+.field.wide{grid-column:1/-1}
+.phone{display:flex;align-items:stretch;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
+.phone span{display:grid;place-items:center;padding:0 10px;background:var(--sunk);font-weight:700;font-size:14px}
+.phone input{border:0!important;border-radius:0!important}
+.checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}
+.checks label,.agree{display:flex;gap:8px;align-items:flex-start;font-size:14px;cursor:pointer}
+.checks input,.agree input{width:18px;height:18px;margin-top:2px;accent-color:var(--accent)}
+.preview{font-size:13px;font-weight:700;color:var(--accent)}
+.err{color:var(--err);font-size:13px;font-weight:600;margin:0}
+.err:empty{display:none}
+.vbox{border:2px dashed var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.vbox h3{font-size:16px}
+.demo{background:var(--sun);color:var(--sun-ink);border-radius:10px;padding:10px 12px;font-size:13px}
+.demo b{font-size:16px;letter-spacing:.15em}
+.verified{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--ok-soft);color:var(--ok);border-radius:12px;padding:12px 14px;font-weight:700;font-size:14px}
+.verified .linkbtn{color:var(--ok)}
+.formfoot{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.inline{background:var(--sunk);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.notice{background:var(--sunk);border-radius:12px;padding:12px 14px;font-size:14px;color:var(--muted)}
+.back{align-self:flex-start}
+.mrow{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.upl{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.uslot{position:relative;aspect-ratio:4/3;max-width:100%;border-radius:10px;overflow:hidden;background:var(--sunk);border:1px solid var(--line)}
+.uslot img{width:100%;height:100%;object-fit:cover;display:block}
+.uslot button{position:absolute;top:6px;right:6px;min-height:30px;padding:0 10px;border-radius:8px;border:0;background:var(--fg);color:var(--bg);font-size:12px;font-weight:700;cursor:pointer}
+.uadd{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;aspect-ratio:4/3;max-width:100%;border:2px dashed var(--line);border-radius:10px;cursor:pointer;color:var(--muted);font-weight:700;font-size:13px;text-align:center;padding:8px}
+.uadd:hover{border-color:var(--accent);color:var(--accent)}
+.uadd input{position:absolute;width:1px;height:1px;opacity:0}
+.vfile{display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:var(--sunk);border-radius:10px;padding:10px 12px;font-size:14px}
+
+.atabs{display:flex;gap:6px;flex-wrap:wrap}
+.acard{border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.acard h3{font-size:17px;font-weight:800}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:6px 16px;font-size:14px}
+.kv div span{display:block;font-size:12px;color:var(--muted);font-weight:600}
+.contact{background:var(--accent-soft);border-radius:10px;padding:10px 12px;font-size:14px}
+.contact b{font-size:15px}
+.mstrip{display:flex;gap:6px;flex-wrap:wrap}
+.mstrip img{width:110px;height:80px;object-fit:cover;border-radius:8px}
+
+footer{border-top:1px solid var(--line);padding-block:18px;color:var(--muted);font-size:13px}
+footer .wrap{display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:12px 18px;border-radius:12px;font-weight:700;font-size:14px;z-index:50;max-width:calc(100% - 32px);box-shadow:0 6px 24px rgba(0,0,0,.25)}
+</style>
+</head>
+<body>
+<header class="top" id="top">
+  <div class="wrap bar">
+    <a class="brand" href="#" data-act="view" data-view="deals">
+      <span class="mark"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg></span>
+      <span><b>Indoyards</b><small>Properties at discount</small></span>
+    </a>
+    <span class="tagline" id="tagline">Mehenga Ghar, Saste Daam!</span>
+    <span class="spacer"></span>
+    <div class="actions">
+      <a class="phoneline" id="phoneLink" href="tel:+918180053763"><span>Call / WhatsApp</span><b class="num"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg><span id="phoneText" style="font-size:17px;color:inherit;text-transform:none;letter-spacing:0">+91 81800 53763</span></b></a>
+      <button class="btn ghost sm" data-act="admin" id="adminBtn" hidden>Admin <span class="badge num" id="pendingBadge" hidden></span></button>
+      <button class="btn ghost sm" data-act="requirement">Post requirement</button>
+      <button class="btn sm" data-act="view" data-view="post"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Post property</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+<div class="demo-banner" id="demoBanner" hidden><b>Preview mode.</b> The database isn't connected yet, so you're seeing sample properties and nothing you post is saved. Add your Supabase keys in CONFIG to go live.</div>
+
+<!-- PROPERTIES -->
+<section class="view" id="v-deals" aria-label="Properties">
+  <div class="filters" aria-label="Filters">
+    <div class="frow">
+      <div class="seg" role="group" aria-label="Property type" id="f-cat"></div>
+      <div class="seg" role="group" aria-label="Sale or lease" id="f-deal"></div>
+      <div class="frow" role="group" aria-label="Locality" id="f-area"></div>
+    </div>
+    <div class="frow">
+      <label class="search" for="f-q">
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input id="f-q" type="search" placeholder="Search property or society name, landmark" aria-label="Search property or society name">
+      </label>
+      <div class="frow" role="group" aria-label="Bedrooms" id="f-bhk"></div>
+    </div>
+    <div class="frow">
+      <label class="fsel"><span class="flabel">Budget</span><select id="f-budget"></select></label>
+      <label class="fsel"><span class="flabel">Area (sq ft)</span><select id="f-sqft"></select></label>
+      <label class="fsel"><span class="flabel">Furnishing</span><select id="f-furnish"></select></label>
+      <label class="fsel"><span class="flabel">Posted by</span><select id="f-by"><option value="any">Anyone</option><option>Owner</option><option>Builder</option><option>Agent</option></select></label>
+      <label class="fsel"><span class="flabel">Sort</span><select id="f-sort"><option value="discount">Biggest discount</option><option value="low">Price: low to high</option><option value="high">Price: high to low</option><option value="new">Newest first</option><option value="ending">Ending soon</option></select></label>
+    </div>
+    <div class="frow">
+      <button class="linkbtn" data-act="reset">Clear filters</button>
+      <span class="count num" id="count"></span>
+    </div>
+  </div>
+  <div class="split">
+    <section class="listpane" aria-label="Property list">
+      <div class="listhead"><span id="listTitle">Properties</span><span id="sortLabel"></span></div>
+      <div class="cards" id="list"></div>
+    </section>
+    <article class="detail" id="detail" aria-label="Property details"></article>
+  </div>
+</section>
+
+<!-- POST REQUIREMENT -->
+<section class="view" id="v-requirement" hidden aria-label="Post requirement">
+  <form class="panel" id="reqForm" novalidate>
+    <button type="button" class="linkbtn back" data-act="view" data-view="deals">← Back to properties</button>
+    <h2>Didn't find it? Tell us what you're searching for</h2>
+    <p class="lead">Fill in your search and contact details. The Indoyards team will send you matching discounted properties.</p>
+    <fieldset>
+      <legend>Your search</legend>
+      <div class="frow"><div class="seg" role="group" aria-label="Property type" id="rq-cat"></div><div class="seg" role="group" aria-label="Buy or rent" id="rq-deal"></div></div>
+      <div class="frow" role="group" aria-label="Locality" id="rq-area"></div>
+      <div class="frow" role="group" aria-label="Bedrooms" id="rq-bhk"></div>
+      <div class="frow">
+        <label class="fsel"><span class="flabel">Budget</span><select id="rq-budget"></select></label>
+        <label class="fsel"><span class="flabel">Area (sq ft)</span><select id="rq-sqft"></select></label>
+        <label class="fsel"><span class="flabel">Furnishing</span><select id="rq-furnish"></select></label>
+      </div>
+      <label class="field"><span>Anything else (optional)</span><textarea id="rq-notes" maxlength="600" placeholder="e.g. Need by 1 December, covered parking, near Phase 1"></textarea></label>
+    </fieldset>
+    <fieldset>
+      <legend>Your contact details</legend>
+      <div class="fgrid">
+        <label class="field"><span>Full name</span><input id="rq-name" autocomplete="name"></label>
+        <label class="field"><span>Mobile number</span><span class="phone"><span>+91</span><input id="rq-phone" inputmode="numeric" maxlength="10" autocomplete="tel-national" aria-label="10-digit mobile number"></span></label>
+        <label class="field"><span>Email</span><input id="rq-email" type="email" autocomplete="email"></label>
+      </div>
+      <small class="cmeta">Only the Indoyards team sees these details.</small>
+    </fieldset>
+    <p class="err" id="rq-err" role="alert"></p>
+    <div class="formfoot"><button class="btn" type="submit" id="rq-submit">Send my requirement</button></div>
+  </form>
+</section>
+
+<!-- POST PROPERTY -->
+<section class="view" id="v-post" hidden aria-label="Post property">
+  <form class="panel" id="postForm" novalidate>
+    <button type="button" class="linkbtn back" data-act="view" data-view="deals">← Back to properties</button>
+    <h2>Post your property</h2>
+    <p class="lead">Free to list. Give the normal price and your Indoyards deal price. The Indoyards team checks every property and calls you before it goes live. Your phone number and email are never shown.</p>
+    <div class="verified" id="pp-done" hidden></div>
+
+    <fieldset>
+      <legend>Your contact details</legend>
+      <div class="fgrid">
+        <label class="field"><span>Full name</span><input id="pp-oname" autocomplete="name"></label>
+        <label class="field"><span>Mobile number</span><span class="phone"><span>+91</span><input id="pp-ophone" inputmode="numeric" maxlength="10" autocomplete="tel-national" aria-label="10-digit mobile number"></span></label>
+        <label class="field"><span>Email (optional)</span><input id="pp-oemail" type="email" autocomplete="email"></label>
+      </div>
+      <small class="cmeta">Only the Indoyards team sees these. We call you to confirm the listing and when someone is interested.</small>
+    </fieldset>
+
+    <fieldset>
+      <legend>Property</legend>
+      <div class="fgrid">
+        <label class="field"><span>Property type</span><select id="pp-cat"><option value="residential">Residential</option><option value="commercial">Commercial</option><option value="other">Other (plot, warehouse…)</option></select></label>
+        <label class="field"><span>Sale or lease</span><select id="pp-deal"><option value="sale">Sale</option><option value="lease">Lease / rent</option></select></label>
+        <label class="field"><span>Locality</span><select id="pp-area"></select></label>
+        <label class="field"><span>Area / landmark</span><input id="pp-sub" placeholder="e.g. Hinjewadi Phase 1"></label>
+        <label class="field"><span>Property or society name</span><input id="pp-name" placeholder="e.g. Green Meadows Society"></label>
+        <label class="field"><span>Listing title</span><input id="pp-title" maxlength="70" placeholder="e.g. 2 BHK with park view"></label>
+        <label class="field" id="pp-bhk-wrap"><span>Bedrooms</span><select id="pp-bhk"><option value="1">1 BHK</option><option value="2" selected>2 BHK</option><option value="3">3 BHK</option><option value="4">4 BHK</option><option value="5">5+ BHK</option></select></label>
+        <label class="field" id="pp-ptype-wrap" hidden><span>Kind of space</span><select id="pp-ptype"><option>Office</option><option>Shop</option><option>Showroom</option><option>Co-working</option><option>Plot</option><option>Warehouse</option><option>Other</option></select></label>
+        <label class="field"><span>Carpet area (sq ft)</span><input id="pp-sqft" type="number" min="50" inputmode="numeric" placeholder="e.g. 1050"></label>
+        <label class="field"><span>Floor</span><input id="pp-floor" placeholder="e.g. 9 of 14"></label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Price</legend>
+      <div class="fgrid">
+        <label class="field"><span id="pp-mrp-l">Normal price (₹)</span><input id="pp-mrp" type="number" min="1" inputmode="numeric" placeholder="e.g. 12500000"><small class="preview num" id="pp-mrp-p"></small></label>
+        <label class="field"><span id="pp-price-l">Indoyards deal price (₹)</span><input id="pp-price" type="number" min="1" inputmode="numeric" placeholder="e.g. 11500000"><small class="preview num" id="pp-price-p"></small></label>
+        <label class="field" id="pp-dep-wrap" hidden><span>Security deposit (₹)</span><input id="pp-dep" type="number" min="0" inputmode="numeric" placeholder="e.g. 100000"></label>
+        <label class="field"><span>Deal valid until</span><input id="pp-ends" type="date"><small>Up to 90 days.</small></label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Details</legend>
+      <div class="fgrid">
+        <label class="field"><span>Furnishing</span><select id="pp-furnish"></select></label>
+        <label class="field"><span id="pp-avail-l">Possession</span><input id="pp-avail" placeholder="e.g. Ready to move / From 1 Dec"></label>
+        <label class="field"><span>You are the</span><select id="pp-by"><option>Owner</option><option>Builder</option><option>Agent</option></select></label>
+        <label class="field"><span>MahaRERA number (optional)</span><input id="pp-rera" placeholder="e.g. P52100012345"></label>
+      </div>
+      <div class="field"><span>Amenities</span><div class="checks" id="pp-amen"></div></div>
+      <label class="field wide"><span>Description</span><textarea id="pp-desc" maxlength="1500" placeholder="Facing, view, parking, nearby schools and IT parks. Phone numbers are hidden automatically."></textarea></label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Photos, video and comments</legend>
+      <div class="field"><span>Photos (up to 4)</span><small>JPG or PNG. We resize them automatically so they load fast.</small>
+        <div class="upl" id="pp-photos"></div></div>
+      <div class="field"><span>Video (1, optional)</span><small id="pp-vhint">MP4 or MOV, up to 25 MB. A 30–60 second walkthrough on your phone works well.</small>
+        <div id="pp-video"></div></div>
+      <label class="field wide"><span>Comments</span><textarea id="pp-comments" maxlength="800" placeholder="e.g. Owner relocating, price negotiable for quick closing. Visits on weekends."></textarea></label>
+    </fieldset>
+
+    <div class="notice"><b>Indoyards success fee.</b> Listing is free. When your property is rented through Indoyards you pay 2 months' rent as commission. For sale deals, the commission is agreed with you before approval.</div>
+    <label class="agree"><input type="checkbox" id="pp-agree"> I confirm these details are correct and agree to the Indoyards success fee if a deal closes through Indoyards.</label>
+    <p class="err" id="pp-err" role="alert"></p>
+    <div class="formfoot"><button class="btn deal" type="submit" id="pp-submit">Submit for approval</button><span class="cmeta" id="pp-progress" role="status"></span></div>
+  </form>
+</section>
+
+<!-- ADMIN -->
+<section class="view" id="v-admin" hidden aria-label="Admin">
+  <div class="panel" style="max-width:none">
+    <button type="button" class="linkbtn back" data-act="view" data-view="deals">← Back to properties</button>
+    <h2>Admin</h2>
+    <div id="verify-ad"></div>
+    <div class="atabs" id="atabs"></div>
+    <div id="admin"></div>
+  </div>
+</section>
+</main>
+
+<footer><div class="wrap"><span>© Indoyards · Properties at discount</span><span class="num">Call / WhatsApp +91 81800 53763 · <button class="linkbtn" data-act="admin">Admin login</button></span></div></footer>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+/* =====================================================================
+   SETTINGS — fill these two values from Supabase (Project Settings → API).
+   Leave them empty to run in preview mode with sample properties.
+   ===================================================================== */
+const CONFIG = {
+  SUPABASE_URL: "https://vjzfpqflmthoshcfxial.supabase.co/rest/v1/",           // e.g. "https://abcdxyz.supabase.co"
+  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZqemZwcWZsbXRob3NoY2Z4aWFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyNzkxMTYsImV4cCI6MjA5Nzg1NTExNn0.kPWSiuv-7dapFHVzGb5Ephh1MLRIiT_nWXSZnaqflHc",      // the "anon public" key
+  CONTACT_PHONE: "8180053763",
+  TAGLINE: "Mehenga Ghar, Saste Daam!",
+  LOCALITIES: ["Baner","Hinjewadi","Wakad"],
+  MAX_PHOTOS: 4,
+  MAX_VIDEO_MB: 25,
+  BUCKET: "property-media"
+};
+
+(function(){
+"use strict";
+const LIVE=!!(CONFIG.SUPABASE_URL&&CONFIG.SUPABASE_ANON_KEY&&window.supabase);
+const sb=LIVE?window.supabase.createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_ANON_KEY):null;
+const AREAS=CONFIG.LOCALITIES;
+const CATS=[["residential","Residential"],["commercial","Commercial"],["other","Other properties"]];
+const DEALS=[["sale","Sale"],["lease","Lease"]];
+const AMENITIES=["Covered parking","Lift","Power backup","24×7 security","Gym","Swimming pool","Clubhouse","Garden","Kids play area","Water 24×7","Fire safety","Main road facing"];
+const FURNISH=["Unfurnished","Semi-furnished","Fully furnished","Bare shell","Warm shell","Not applicable"];
+const SQFT=[["any","Any size"],["0-600","Under 600"],["600-1000","600 – 1,000"],["1000-1500","1,000 – 1,500"],["1500-2500","1,500 – 2,500"],["2500-","2,500+"]];
+const BUDGETS={
+  sale:[["any","Any budget"],["0-5000000","Up to ₹50 L"],["5000000-10000000","₹50 L – ₹1 Cr"],["10000000-15000000","₹1 Cr – ₹1.5 Cr"],["15000000-20000000","₹1.5 Cr – ₹2 Cr"],["20000000-","Above ₹2 Cr"]],
+  lease:[["any","Any budget"],["0-15000","Up to ₹15,000/mo"],["15000-30000","₹15,000 – ₹30,000/mo"],["30000-50000","₹30,000 – ₹50,000/mo"],["50000-100000","₹50,000 – ₹1 L/mo"],["100000-","Above ₹1 L/mo"]]
+};
+const BHKS=[["1","1 BHK"],["2","2 BHK"],["3","3 BHK"],["4","4+ BHK"]];
+const SORTS={discount:"Biggest discount first",low:"Lowest price first",high:"Highest price first",new:"Newest first",ending:"Ending soonest first"};
+
+/* ---------- sample properties (preview mode only; the database gets its own copy from schema.sql) ---------- */
+const inDays=n=>new Date(Date.now()+n*864e5).toISOString().slice(0,10);
+const SAMPLES=[
+ {category:"residential",deal:"sale",locality:"Baner",landmark:"Baner – Balewadi Road",property_name:"Sample Society A",title:"2 BHK in gated society",bhk:2,carpet_sqft:1050,floor:"9 of 14",normal_price:12500000,deal_price:11500000,deal_ends:inDays(25),furnishing:"Semi-furnished",possession:"Ready to move",posted_by:"Owner",amenities:["Covered parking","Lift","Gym","Clubhouse","24×7 security"],description:"Sample listing. East-facing flat with two balconies, close to Baner main road, schools and Balewadi High Street.",comments:"Owner relocating, open to quick closing."},
+ {category:"residential",deal:"sale",locality:"Wakad",landmark:"Wakad – Dange Chowk",property_name:"Sample Heights B",title:"3 BHK near the highway",bhk:3,carpet_sqft:1380,floor:"4 of 12",normal_price:10500000,deal_price:9600000,deal_ends:inDays(40),furnishing:"Unfurnished",possession:"Ready to move",posted_by:"Builder",amenities:["Swimming pool","Kids play area","Power backup","Lift"],description:"Sample listing. Spacious 3 BHK with quick access to the Mumbai–Bangalore highway and Hinjewadi IT parks.",comments:""},
+ {category:"residential",deal:"sale",locality:"Hinjewadi",landmark:"Hinjewadi Phase 1",property_name:"Sample Residency C",title:"1 BHK walk to IT park",bhk:1,carpet_sqft:640,floor:"6 of 10",normal_price:5200000,deal_price:4750000,deal_ends:inDays(6),furnishing:"Semi-furnished",possession:"Ready to move",posted_by:"Owner",amenities:["Lift","24×7 security","Covered parking","Garden"],description:"Sample listing. Compact 1 BHK, good for IT professionals or rental income.",comments:"Rented at present, tenant leaving next month."},
+ {category:"residential",deal:"lease",locality:"Wakad",landmark:"Wakad – Kaspate Vasti",property_name:"Sample Park D",title:"2 BHK family flat",bhk:2,carpet_sqft:980,floor:"3 of 7",normal_price:28000,deal_price:25000,deposit:100000,deal_ends:inDays(20),furnishing:"Fully furnished",possession:"From 1 Dec",posted_by:"Owner",amenities:["Covered parking","Lift","Water 24×7","24×7 security"],description:"Sample listing. Fully furnished 2 BHK with modular kitchen, suitable for families.",comments:"Maintenance included in rent."},
+ {category:"residential",deal:"lease",locality:"Baner",landmark:"Baner – Pan Card Club Road",property_name:"Sample Towers E",title:"3 BHK with terrace",bhk:3,carpet_sqft:1600,floor:"11 of 11",normal_price:45000,deal_price:40000,deposit:200000,deal_ends:inDays(30),furnishing:"Semi-furnished",possession:"Immediately",posted_by:"Agent",amenities:["Gym","Swimming pool","Clubhouse","Covered parking"],description:"Sample listing. Top-floor 3 BHK with a private terrace and hill view.",comments:""},
+ {category:"commercial",deal:"sale",locality:"Baner",landmark:"Baner Main Road",property_name:"Sample Business Park F",title:"Office space in business tower",space_type:"Office",carpet_sqft:1200,floor:"5 of 8",normal_price:16000000,deal_price:14500000,deal_ends:inDays(45),furnishing:"Bare shell",possession:"Ready",posted_by:"Builder",amenities:["Covered parking","Power backup","Lift","Fire safety"],description:"Sample listing. Bare-shell office on Baner main road with two reserved car parks.",comments:""},
+ {category:"commercial",deal:"lease",locality:"Hinjewadi",landmark:"Hinjewadi Phase 2",property_name:"Sample Plaza G",title:"Ground-floor retail shop",space_type:"Shop",carpet_sqft:450,floor:"Ground",normal_price:60000,deal_price:52000,deposit:300000,deal_ends:inDays(15),furnishing:"Warm shell",possession:"Immediately",posted_by:"Owner",amenities:["Main road facing","Covered parking"],description:"Sample listing. Road-facing shop with good footfall from nearby offices.",comments:"Suitable for café, pharmacy or retail."},
+ {category:"other",deal:"sale",locality:"Hinjewadi",landmark:"Hinjewadi Phase 3",property_name:"Sample Plot H",title:"NA plot with clear title",space_type:"Plot",carpet_sqft:2000,floor:"—",normal_price:6500000,deal_price:5800000,deal_ends:inDays(60),furnishing:"Not applicable",possession:"Immediately",posted_by:"Owner",amenities:["Water 24×7"],description:"Sample listing. Residential NA plot with road access and compound wall.",comments:""},
+ {category:"other",deal:"lease",locality:"Wakad",landmark:"Wakad – Tathawade",property_name:"Sample Godown I",title:"Warehouse with truck access",space_type:"Warehouse",carpet_sqft:5000,floor:"Ground",normal_price:120000,deal_price:105000,deposit:600000,deal_ends:inDays(35),furnishing:"Not applicable",possession:"Immediately",posted_by:"Owner",amenities:["Power backup","24×7 security"],description:"Sample listing. 18 ft clear height, three-phase power, easy truck movement.",comments:""}
+].map((p,i)=>Object.assign({id:"sample-"+(i+1),status:"approved",is_sample:true,images:[],video:null,deposit:0,bhk:0,space_type:"",rera:"",approved_at:new Date(Date.now()-i*36e5).toISOString(),created_at:new Date(Date.now()-i*36e5).toISOString()},p));
+
+const S={view:"deals",cat:"residential",deal:"sale",area:"all",bhk:[],budget:"any",sqft:"any",furnish:"any",by:"any",sort:"discount",q:"",sel:null,enquire:null,img:0,
+  props:[],mine:[],user:null,isAdmin:false,state:"loading",atab:"pending",reject:null,
+  admin:{pending:[],live:[],reqs:[],leads:[]},rq:{cat:"residential",deal:"sale",area:"Any",bhk:[]},
+  photos:[],video:null,otp:{}};
+let contact=load("iy_contact",{name:"",phone:"",email:""});
+const DEMO={props:SAMPLES.slice(),contacts:{},reqs:[],leads:[],user:null,code:null,email:null};
+
+function load(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+const $=id=>document.getElementById(id);
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function amt(n){n=Number(n)||0;if(n>=1e7)return "₹"+parseFloat((n/1e7).toFixed(2))+" Cr";if(n>=1e5)return "₹"+parseFloat((n/1e5).toFixed(2))+" L";return "₹"+n.toLocaleString("en-IN")}
+const per=d=>d==="lease"?"/mo":"";
+const offPct=l=>Math.round((l.normal_price-l.deal_price)/l.normal_price*100);
+function daysLeft(iso){if(!iso)return null;return Math.ceil((new Date(String(iso).slice(0,10)+"T23:59:59")-Date.now())/864e5)}
+function endsText(iso){const d=daysLeft(iso);if(d==null)return "";if(d<0)return "Deal ended";if(d<=1)return "Ends today";return "Ends in "+d+" days"}
+function hidePhones(s){return String(s||"").replace(/(\+?\d[\d\s-]{8,}\d)/g,"[number hidden]")}
+function fmtD(d){const x=new Date(d);return isNaN(x)?"":x.toLocaleString("en-IN",{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"})}
+function toast(msg){const t=$("toast");t.textContent=msg;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>t.hidden=true,4000)}
+function bhkLabel(l){if(l.category!=="residential")return l.space_type||"Space";return (l.bhk>=5?"5+":l.bhk)+" BHK"}
+function catLabel(c){return (CATS.find(x=>x[0]===c)||[c,c])[1]}
+function isLive(l){return l.status==="approved"&&(daysLeft(l.deal_ends)==null||daysLeft(l.deal_ends)>=0)}
+function opts(list,cur){return list.map(([v,l])=>`<option value="${v}"${v===cur?" selected":""}>${l}</option>`).join("")}
+const validPhone=p=>/^[6-9]\d{9}$/.test(p);
+const validEmail=e=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e);
+function newId(){return (crypto.randomUUID?crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,c=>{const r=Math.random()*16|0;return (c==="x"?r:(r&3|8)).toString(16)}))}
+function one(x){return Array.isArray(x)?x[0]:x}
+
+const ICON_HOME='<svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V9l8-5 8 5v12"/><path d="M9 21v-5h6v5"/></svg>';
+const ICON_PIN='<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2"/></svg>';
+const ICON_LOCK='<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+const ICON_CHECK='<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+const ICON_PHOTO='<svg aria-hidden="true" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="M21 16l-5-5-9 8"/></svg>';
+
+/* =====================================================================
+   DATA LAYER — Supabase when CONFIG is filled, in-memory preview otherwise
+   ===================================================================== */
+const api={
+  async listApproved(){
+    if(!LIVE)return DEMO.props.filter(p=>p.status==="approved");
+    const {data,error}=await sb.from("properties").select("*").eq("status","approved").order("approved_at",{ascending:false}).limit(500);
+    if(error)throw error;return data;
+  },
+  async currentUser(){
+    if(!LIVE)return DEMO.user;
+    const {data}=await sb.auth.getSession();const u=data&&data.session&&data.session.user;return u?{id:u.id,email:u.email}:null;
+  },
+  async sendCode(email){
+    if(!LIVE){DEMO.code=String(Math.floor(100000+Math.random()*900000));DEMO.email=email;return {demoCode:DEMO.code}}
+    const {error}=await sb.auth.signInWithOtp({email,options:{shouldCreateUser:true}});if(error)throw error;return {};
+  },
+  async verifyCode(email,code){
+    if(!LIVE){if(code!==DEMO.code||email!==DEMO.email)throw new Error("bad code");DEMO.user={id:"preview-user",email};return DEMO.user}
+    const {data,error}=await sb.auth.verifyOtp({email,token:code,type:"email"});if(error)throw error;return {id:data.user.id,email:data.user.email};
+  },
+  async signOut(){if(!LIVE){DEMO.user=null;return}await sb.auth.signOut()},
+  async isAdmin(){
+    if(!LIVE)return !!DEMO.user;
+    const {data,error}=await sb.rpc("is_admin");return !error&&!!data;
+  },
+  async upload(pid,file,name){
+    if(!LIVE)return URL.createObjectURL(file);
+    const path=`public/${pid}/${name}`;
+    const {error}=await sb.storage.from(CONFIG.BUCKET).upload(path,file,{contentType:file.type,upsert:false,cacheControl:"31536000"});
+    if(error)throw error;
+    return sb.storage.from(CONFIG.BUCKET).getPublicUrl(path).data.publicUrl;
+  },
+  async submitProperty(row,ct){
+    if(!LIVE){DEMO.props.push(Object.assign({},row,{created_at:new Date().toISOString()}));DEMO.contacts[row.id]=ct;return}
+    const {error}=await sb.rpc("submit_property",{prop:row,contact:ct});if(error)throw error;
+  },
+  async sendRequirement(row){
+    if(!LIVE){DEMO.reqs.push(Object.assign({id:newId(),created_at:new Date().toISOString(),status:"New"},row));return}
+    const {error}=await sb.from("requirements").insert(row);if(error)throw error;
+  },
+  async sendLead(row){
+    if(!LIVE){const p=DEMO.props.find(x=>x.id===row.property_id);DEMO.leads.push(Object.assign({id:newId(),created_at:new Date().toISOString(),status:"New",properties:p},row));return}
+    const {error}=await sb.from("enquiries").insert(row);if(error)throw error;
+  },
+  async adminLoad(){
+    if(!LIVE){
+      const withC=p=>Object.assign({},p,{property_contacts:DEMO.contacts[p.id]||null});
+      return {pending:DEMO.props.filter(p=>p.status==="pending").map(withC),live:DEMO.props.filter(p=>p.status==="approved").map(withC),reqs:DEMO.reqs.slice().reverse(),
+        leads:DEMO.leads.slice().reverse().map(l=>Object.assign({},l,{owner:DEMO.contacts[l.property_id]||null}))};
+    }
+    const [p,l,r,e]=await Promise.all([
+      sb.from("properties").select("*, property_contacts(*)").eq("status","pending").order("created_at"),
+      sb.from("properties").select("*, property_contacts(*)").eq("status","approved").order("approved_at",{ascending:false}),
+      sb.from("requirements").select("*").order("created_at",{ascending:false}).limit(300),
+      sb.from("enquiries").select("*, properties(title,property_name,deal,deal_price,property_contacts(*))").order("created_at",{ascending:false}).limit(300)
+    ]);
+    const err=p.error||l.error||r.error||e.error;if(err)throw err;
+    return {pending:p.data,live:l.data,reqs:r.data,leads:e.data.map(x=>Object.assign({},x,{owner:x.properties?one(x.properties.property_contacts):null}))};
+  },
+  async setStatus(id,status,reason){
+    const patch={status};if(status==="approved")patch.approved_at=new Date().toISOString();if(status==="rejected")patch.reject_reason=reason||null;
+    if(!LIVE){const p=DEMO.props.find(x=>x.id===id);if(p)Object.assign(p,patch);return}
+    const {error}=await sb.from("properties").update(patch).eq("id",id);if(error)throw error;
+  },
+  async setRowStatus(table,id,status){
+    if(!LIVE){const arr=table==="requirements"?DEMO.reqs:DEMO.leads;const x=arr.find(y=>y.id===id);if(x)x.status=status;return}
+    const {error}=await sb.from(table).update({status}).eq("id",id);if(error)throw error;
+  }
+};
+
+/* ---------- browsing ---------- */
+function filtered(){
+  const q=S.q.trim().toLowerCase();
+  let rows=S.props.filter(l=>isLive(l)&&l.category===S.cat&&l.deal===S.deal&&(S.area==="all"||l.locality===S.area));
+  if(S.cat==="residential"&&S.bhk.length)rows=rows.filter(l=>S.bhk.some(b=>b==="4"?l.bhk>=4:l.bhk===Number(b)));
+  if(S.budget!=="any"){const [a,b]=S.budget.split("-");rows=rows.filter(l=>l.deal_price>=Number(a)&&(b===""||l.deal_price<=Number(b)))}
+  if(S.sqft!=="any"){const [a,b]=S.sqft.split("-");rows=rows.filter(l=>l.carpet_sqft>=Number(a)&&(b===""||l.carpet_sqft<Number(b)))}
+  if(S.furnish!=="any")rows=rows.filter(l=>l.furnishing===S.furnish);
+  if(S.by!=="any")rows=rows.filter(l=>l.posted_by===S.by);
+  if(q)rows=rows.filter(l=>[l.property_name,l.title,l.landmark,l.locality].join(" ").toLowerCase().includes(q));
+  const srt={discount:(a,b)=>offPct(b)-offPct(a),low:(a,b)=>a.deal_price-b.deal_price,high:(a,b)=>b.deal_price-a.deal_price,
+    new:(a,b)=>String(b.approved_at||"").localeCompare(String(a.approved_at||"")),ending:(a,b)=>String(a.deal_ends||"9").localeCompare(String(b.deal_ends||"9"))};
+  return rows.sort(srt[S.sort]);
+}
+function renderChips(){
+  $("f-cat").innerHTML=CATS.map(([id,l])=>`<button data-act="cat" data-v="${id}" aria-pressed="${S.cat===id}">${l}</button>`).join("");
+  $("f-deal").innerHTML=DEALS.map(([id,l])=>`<button data-act="deal" data-v="${id}" aria-pressed="${S.deal===id}">${l}</button>`).join("");
+  $("f-area").innerHTML=[["all","All areas"]].concat(AREAS.map(a=>[a,a])).map(([v,l])=>`<button class="chip" data-act="area" data-v="${esc(v)}" aria-pressed="${S.area===v}">${esc(l)}</button>`).join("");
+  $("f-bhk").hidden=S.cat!=="residential";
+  $("f-bhk").innerHTML=S.cat!=="residential"?"":BHKS.map(([v,l])=>`<button class="chip" data-act="bhk" data-v="${v}" aria-pressed="${S.bhk.includes(v)}">${l}</button>`).join("");
+  if(!BUDGETS[S.deal].some(o=>o[0]===S.budget))S.budget="any";
+  $("f-budget").innerHTML=opts(BUDGETS[S.deal],S.budget);
+}
+function renderDeals(){
+  renderChips();
+  const rows=filtered();
+  $("listTitle").textContent=catLabel(S.cat)+" for "+(S.deal==="lease"?"lease":"sale");
+  $("sortLabel").textContent=SORTS[S.sort];
+  $("count").textContent=rows.length+(rows.length===1?" property":" properties")+" · "+(S.area==="all"?"all areas":S.area);
+  const cur=rows.find(r=>r.id===S.sel)||rows[0]||null;
+  if(S.state==="loading"&&!rows.length)$("list").innerHTML=`<div class="empty">Loading properties…</div>`;
+  else if(S.state==="error"&&!rows.length)$("list").innerHTML=`<div class="empty">Properties could not load. Check your connection and refresh the page.</div>`;
+  else if(!rows.length)$("list").innerHTML=`<div class="empty"><span>No properties match this search yet.</span><button class="btn" data-act="requirement">Send us your requirement</button><button class="linkbtn" data-act="reset">Clear filters</button></div>`;
+  else $("list").innerHTML=rows.map(l=>{
+      const d=daysLeft(l.deal_ends);const img=(l.images||[])[0];
+      return `<button class="card" data-act="select" data-id="${esc(l.id)}" aria-pressed="${!!cur&&cur.id===l.id}">
+        <span class="thumb t-${esc(l.category)}">${img?`<img src="${esc(img)}" alt="" loading="lazy">`:`${ICON_HOME}<span>${esc(bhkLabel(l))}</span>`}</span>
+        <span class="cbody">
+          <span class="ctop"><span class="ctitle">${esc(l.title)}</span><span class="off">${offPct(l)}% OFF</span></span>
+          <span class="cmeta">${esc(l.property_name)} · ${esc(l.locality)}</span>
+          <span class="cmeta num">${esc(bhkLabel(l))} · ${Number(l.carpet_sqft).toLocaleString("en-IN")} sq ft · ${esc(l.furnishing)}</span>
+          <span class="prices num"><b>${amt(l.deal_price)}${per(l.deal)}</b><s>${amt(l.normal_price)}${per(l.deal)}</s></span>
+          ${(d!=null&&d<=7)||l.is_sample?`<span class="tags" style="margin-top:6px">${d!=null&&d<=7?`<span class="tag hot">${endsText(l.deal_ends)}</span>`:""}${l.is_sample?'<span class="tag">Sample</span>':""}</span>`:""}
+        </span></button>`}).join("");
+  renderDetail(cur);
+}
+function renderDetail(l){
+  const el=$("detail");
+  if(!l){el.innerHTML=`<div class="empty" style="padding:60px 20px">Pick a property on the left to see its details.</div>`;return}
+  const imgs=(l.images||[]).filter(Boolean);const i=Math.min(S.img,Math.max(0,imgs.length-1));
+  const facts=[["Carpet area",Number(l.carpet_sqft).toLocaleString("en-IN")+" sq ft"],["Configuration",bhkLabel(l)],["Furnishing",l.furnishing],[l.deal==="lease"?"Available":"Possession",l.possession||"—"],["Floor",l.floor||"—"]];
+  if(l.deal==="lease"&&l.deposit)facts.push(["Security deposit",amt(l.deposit)]);
+  if(l.rera)facts.push(["MahaRERA no.",l.rera]);
+  facts.push(["Posted by",l.posted_by]);
+  const enq=S.enquire===l.id;
+  el.innerHTML=`<div class="gallery">
+      <div class="gmain t-${esc(l.category)}">${imgs.length?`<img src="${esc(imgs[i])}" alt="Photo ${i+1} of ${esc(l.title)}">`:`${ICON_PHOTO}<span>Photos coming soon</span>`}</div>
+      ${imgs.length>1?`<div class="gthumbs">${imgs.map((src,k)=>`<button data-act="img" data-k="${k}" aria-pressed="${k===i}" aria-label="Show photo ${k+1}"><img src="${esc(src)}" alt=""></button>`).join("")}</div>`:""}
+    </div>
+  <div class="dbody">
+    <div class="dhead">
+      <div style="display:flex;flex-direction:column;gap:8px;min-width:0;flex:1 1 280px">
+        <div class="tags"><span class="tag">${esc(catLabel(l.category))}</span><span class="tag">For ${l.deal==="lease"?"lease":"sale"}</span><span class="tag ok">Checked by Indoyards</span>${l.is_sample?'<span class="tag">Sample listing</span>':""}</div>
+        <h1>${esc(l.title)}</h1>
+        <div style="font-weight:700">${esc(l.property_name)}</div>
+        <div class="loc">${ICON_PIN}${esc(l.landmark?l.landmark+", ":"")}${esc(l.locality)}, Pune</div>
+        <div class="ends">${esc(endsText(l.deal_ends))}</div>
+      </div>
+      <div class="pricebox num">
+        <s>Normal price ${amt(l.normal_price)}${per(l.deal)}</s>
+        <span class="big">${amt(l.deal_price)}${per(l.deal)}</span>
+        <span class="save">You save ${amt(l.normal_price-l.deal_price)}${per(l.deal)} · ${offPct(l)}% OFF</span>
+      </div>
+    </div>
+    <div class="formfoot"><button class="btn deal" data-act="enquire" data-id="${esc(l.id)}">${enq?"Close":"I'm interested"}</button><span class="cmeta num">or call / WhatsApp +91 ${esc(fmtPhone(CONFIG.CONTACT_PHONE))}</span></div>
+    ${enq?`<div class="inline">${contactFields("enq")}
+      <label class="field"><span>Message (optional)</span><textarea id="enq-msg" maxlength="400" placeholder="e.g. Can visit this Saturday morning"></textarea></label>
+      <p class="err" id="enq-err"></p>
+      <div><button class="btn" data-act="sendEnq" data-id="${esc(l.id)}">Send</button></div></div>`:""}
+    <div class="privacy">${ICON_LOCK}<span>The owner's phone number is not shown. Send your details and the Indoyards team will call you to arrange a visit.</span></div>
+    <div class="facts">${facts.map(([k,v])=>`<div class="fact"><span>${esc(k)}</span><b class="num">${esc(v)}</b></div>`).join("")}</div>
+    ${l.description?`<div class="dsec"><h2>About this property</h2><p>${esc(l.description)}</p></div>`:""}
+    ${l.video?`<div class="dsec"><h2>Video walkthrough</h2><video src="${esc(l.video)}" controls preload="metadata" playsinline></video></div>`:""}
+    ${l.comments?`<div class="dsec"><h2>Comments</h2><p>${esc(l.comments)}</p></div>`:""}
+    ${(l.amenities&&l.amenities.length)?`<div class="dsec"><h2>Amenities</h2><div class="amen">${l.amenities.map(a=>`<span>${esc(a)}</span>`).join("")}</div></div>`:""}
+  </div>`;
+}
+function fmtPhone(p){p=String(p||"");return p.length===10?p.slice(0,5)+" "+p.slice(5):p}
+function contactFields(p){
+  return `<div class="fgrid">
+    <label class="field"><span>Full name</span><input id="${p}-name" autocomplete="name" value="${esc(contact.name)}"></label>
+    <label class="field"><span>Mobile number</span><span class="phone"><span>+91</span><input id="${p}-phone" inputmode="numeric" maxlength="10" autocomplete="tel-national" value="${esc(contact.phone)}" aria-label="10-digit mobile number"></span></label>
+    <label class="field"><span>Email</span><input id="${p}-email" type="email" autocomplete="email" value="${esc(contact.email)}"></label></div>`;
+}
+function readContact(p,err){
+  const c={name:$(p+"-name").value.trim(),phone:$(p+"-phone").value.replace(/\D/g,""),email:$(p+"-email").value.trim()};
+  if(c.name.length<2){err.textContent="Enter your full name.";return null}
+  if(!validPhone(c.phone)){err.textContent="Enter a 10-digit Indian mobile number starting with 6, 7, 8 or 9.";return null}
+  if(!validEmail(c.email)){err.textContent="Enter a valid email address.";return null}
+  contact=c;save("iy_contact",c);return c;
+}
+
+/* ---------- requirement (search-style) ---------- */
+function openRequirement(){
+  Object.assign(S.rq,{cat:S.cat,deal:S.deal,area:S.area==="all"?"Any":S.area,bhk:S.bhk.slice()});
+  $("rq-sqft").innerHTML=opts(SQFT,S.sqft);
+  $("rq-furnish").innerHTML=opts([["any","Any"]].concat(FURNISH.slice(0,5).map(f=>[f,f])),S.furnish);
+  renderRqChips(S.budget);
+  $("rq-name").value=contact.name;$("rq-phone").value=contact.phone;$("rq-email").value=contact.email;$("rq-err").textContent="";
+  showView("requirement");
+}
+function renderRqChips(budget){
+  const r=S.rq;
+  $("rq-cat").innerHTML=CATS.map(([id,l])=>`<button type="button" data-act="rqcat" data-v="${id}" aria-pressed="${r.cat===id}">${l}</button>`).join("");
+  $("rq-deal").innerHTML=[["sale","Buy"],["lease","Rent"]].map(([id,l])=>`<button type="button" data-act="rqdeal" data-v="${id}" aria-pressed="${r.deal===id}">${l}</button>`).join("");
+  $("rq-area").innerHTML=[["Any","Any area"]].concat(AREAS.map(a=>[a,a])).map(([v,l])=>`<button type="button" class="chip" data-act="rqarea" data-v="${esc(v)}" aria-pressed="${r.area===v}">${esc(l)}</button>`).join("");
+  $("rq-bhk").hidden=r.cat!=="residential";
+  $("rq-bhk").innerHTML=r.cat!=="residential"?"":BHKS.map(([v,l])=>`<button type="button" class="chip" data-act="rqbhk" data-v="${v}" aria-pressed="${r.bhk.includes(v)}">${l}</button>`).join("");
+  const cur=budget!=null?budget:$("rq-budget").value;
+  $("rq-budget").innerHTML=opts(BUDGETS[r.deal],BUDGETS[r.deal].some(o=>o[0]===cur)?cur:"any");
+}
+const labelOf=(list,v)=>{const f=list.find(o=>o[0]===v);return f?f[1]:v};
+async function postRequirement(e){
+  e.preventDefault();const err=$("rq-err");err.textContent="";
+  const c=readContact("rq",err);if(!c)return;
+  const r=S.rq;
+  const row={category:r.cat,deal:r.deal,locality:r.area,bhk:r.cat==="residential"?r.bhk.map(Number):[],
+    budget:labelOf(BUDGETS[r.deal],$("rq-budget").value),area_sqft:labelOf(SQFT,$("rq-sqft").value),furnishing:$("rq-furnish").value==="any"?"Any":$("rq-furnish").value,
+    notes:$("rq-notes").value.trim(),name:c.name,phone:c.phone,email:c.email};
+  const b=$("rq-submit");b.disabled=true;
+  try{await api.sendRequirement(row);$("rq-notes").value="";showView("deals");toast("Requirement sent. We'll share matching properties soon.")}
+  catch(x){err.textContent="Couldn't send right now. Check your connection and try again."}
+  finally{b.disabled=false}
+}
+function reqSummary(r){
+  const what=r.category==="residential"?(r.bhk&&r.bhk.length?r.bhk.map(b=>b>=4?"4+":b).join("/")+" BHK":"Home"):catLabel(r.category);
+  return (r.deal==="lease"?"Rent":"Buy")+" · "+what+" · "+(r.locality==="Any"?"Any area":r.locality);
+}
+
+/* ---------- email code sign-in ---------- */
+function verifyHTML(scope){
+  const title="Admin sign-in";
+  if(S.user)return `<div class="verified">${ICON_CHECK}<span>Signed in as ${esc(S.user.email)}</span><button type="button" class="linkbtn" data-act="signout">Sign out</button></div>`;
+  const o=S.otp[scope];
+  if(!o||!o.sent)return `<div class="vbox"><h3>${title}</h3>
+    <p class="cmeta" style="margin:0">We email you a 6-digit code. No password needed.</p>
+    <label class="field" style="max-width:360px"><span>Email</span><input id="${scope}-vemail" type="email" autocomplete="email" value="${esc(o?o.email:contact.email)}"></label>
+    <p class="err">${esc(o&&o.err||"")}</p>
+    <div><button type="button" class="btn" data-act="code-send" data-scope="${scope}" ${o&&o.busy?"disabled":""}>${o&&o.busy?"Sending…":"Email me a code"}</button></div></div>`;
+  return `<div class="vbox"><h3>Enter the code we emailed to ${esc(o.email)}</h3>
+    ${o.demoCode?`<div class="demo">Preview mode: email isn't connected, so the code is shown here: <b class="num">${esc(o.demoCode)}</b></div>`:`<p class="cmeta" style="margin:0">Check your inbox and spam folder. The code expires in about an hour.</p>`}
+    <label class="field" style="max-width:220px"><span>6-digit code</span><input id="${scope}-vcode" inputmode="numeric" maxlength="6" autocomplete="one-time-code"></label>
+    <p class="err">${esc(o.err||"")}</p>
+    <div class="formfoot"><button type="button" class="btn" data-act="code-check" data-scope="${scope}" ${o.busy?"disabled":""}>Verify</button>
+    <button type="button" class="linkbtn" data-act="code-change" data-scope="${scope}">Use a different email</button></div></div>`;
+}
+function refreshVerify(){const el=$("verify-ad");if(el)el.innerHTML=verifyHTML("ad")}
+async function codeSend(scope){
+  const email=(($(scope+"-vemail")||{}).value||"").trim();
+  const o={email,err:"",sent:false};S.otp[scope]=o;
+  if(!validEmail(email)){o.err="Enter a valid email address.";refreshVerify();return}
+  o.busy=true;refreshVerify();
+  try{const r=await api.sendCode(email);o.sent=true;o.demoCode=r.demoCode||null}
+  catch(x){o.err=(x&&/rate/i.test(x.message||""))?"Too many codes requested. Wait a minute and try again.":"Couldn't send the code. Check the email address and try again."}
+  o.busy=false;refreshVerify();
+  const c=$(scope+"-vcode");if(c)c.focus();
+}
+async function codeCheck(scope){
+  const o=S.otp[scope];if(!o)return;
+  const code=(($(scope+"-vcode")||{}).value||"").replace(/\D/g,"");
+  if(code.length!==6){o.err="Enter the 6-digit code.";refreshVerify();return}
+  o.busy=true;o.err="";refreshVerify();
+  try{S.user=await api.verifyCode(o.email,code);delete S.otp[scope];await afterSignIn();toast("Email verified")}
+  catch(x){o.err="That code didn't work. Check it, or request a new one.";o.busy=false;refreshVerify()}
+}
+async function afterSignIn(){
+  S.isAdmin=S.user?await api.isAdmin():false;
+  $("adminBtn").hidden=!S.isAdmin;
+  if(S.isAdmin)await loadAdmin();
+  render();
+}
+
+/* ---------- photos & video ---------- */
+function renderMedia(){
+  const ph=S.photos.map((p,k)=>`<div class="uslot"><img src="${esc(p.url)}" alt="Photo ${k+1}"><button type="button" data-act="rmphoto" data-k="${k}">Remove</button></div>`).join("");
+  const add=S.photos.length<CONFIG.MAX_PHOTOS?`<label class="uadd">${ICON_PHOTO}<span>Add photo${S.photos.length?"":"s"}<br>${S.photos.length} of ${CONFIG.MAX_PHOTOS}</span><input type="file" id="pp-photo-in" accept="image/*" multiple></label>`:"";
+  $("pp-photos").innerHTML=ph+add;
+  $("pp-video").innerHTML=S.video?`<div class="vfile"><b>${esc(S.video.name)}</b><span class="cmeta num">${(S.video.size/1048576).toFixed(1)} MB</span><button type="button" class="linkbtn" data-act="rmvideo">Remove</button></div>`:
+    `<label class="uadd" style="aspect-ratio:auto;padding:18px;max-width:340px"><span>Add one video</span><input type="file" id="pp-video-in" accept="video/mp4,video/quicktime,video/webm"></label>`;
+  const pi=$("pp-photo-in");if(pi)pi.addEventListener("change",onPhotos);
+  const vi=$("pp-video-in");if(vi)vi.addEventListener("change",onVideo);
+}
+async function compress(file){
+  try{
+    const img=await createImageBitmap(file);
+    const s=Math.min(1,1600/Math.max(img.width,img.height));const w=Math.round(img.width*s),h=Math.round(img.height*s);
+    const c=document.createElement("canvas");c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);
+    const blob=await new Promise(r=>c.toBlob(r,"image/jpeg",0.82));
+    return blob?new File([blob],"photo.jpg",{type:"image/jpeg"}):file;
+  }catch(e){return file}
+}
+async function onPhotos(e){
+  const err=$("pp-err");err.textContent="";
+  const files=[...e.target.files].filter(f=>/^image\//.test(f.type));
+  const room=CONFIG.MAX_PHOTOS-S.photos.length;
+  if(files.length>room)err.textContent=`Only ${CONFIG.MAX_PHOTOS} photos allowed. The first ${room} were added.`;
+  for(const f of files.slice(0,room)){
+    if(f.size>20*1048576){err.textContent="One photo was over 20 MB and was skipped.";continue}
+    const small=await compress(f);S.photos.push({file:small,url:URL.createObjectURL(small)});
+  }
+  renderMedia();
+}
+function onVideo(e){
+  const err=$("pp-err");err.textContent="";const f=e.target.files[0];if(!f)return;
+  if(f.size>CONFIG.MAX_VIDEO_MB*1048576){err.textContent=`The video is ${(f.size/1048576).toFixed(0)} MB. Keep it under ${CONFIG.MAX_VIDEO_MB} MB (a shorter clip, or record at 720p).`;renderMedia();return}
+  S.video=f;renderMedia();
+}
+
+/* ---------- post property ---------- */
+async function postProperty(e){
+  e.preventDefault();const err=$("pp-err");err.textContent="";$("pp-done").hidden=true;
+  const g=id=>$(id).value.trim();
+  const ct={owner_name:g("pp-oname"),owner_phone:g("pp-ophone").replace(/\D/g,""),owner_email:g("pp-oemail")};
+  if(ct.owner_name.length<2)return err.textContent="Enter your full name.";
+  if(!validPhone(ct.owner_phone))return err.textContent="Enter a 10-digit Indian mobile number starting with 6, 7, 8 or 9.";
+  if(ct.owner_email&&!validEmail(ct.owner_email))return err.textContent="Check the email address, or leave it empty.";
+  const cat=g("pp-cat"),deal=g("pp-deal");
+  const row={id:newId(),status:"pending",category:cat,deal,locality:g("pp-area"),landmark:hidePhones(g("pp-sub")),property_name:hidePhones(g("pp-name")),title:hidePhones(g("pp-title")),
+    bhk:cat==="residential"?Number(g("pp-bhk")):0,space_type:cat==="residential"?"":g("pp-ptype"),carpet_sqft:Number(g("pp-sqft")),floor:g("pp-floor"),
+    normal_price:Number(g("pp-mrp")),deal_price:Number(g("pp-price")),deposit:deal==="lease"?Number(g("pp-dep"))||0:0,deal_ends:g("pp-ends")||null,
+    furnishing:g("pp-furnish"),possession:g("pp-avail"),posted_by:g("pp-by"),rera:g("pp-rera"),
+    amenities:[...document.querySelectorAll("#pp-amen input:checked")].map(i=>i.value),description:hidePhones(g("pp-desc")),comments:hidePhones(g("pp-comments")),images:[],video:null};
+  const dl=daysLeft(row.deal_ends);
+  if(!row.property_name)return err.textContent="Add the property or society name.";
+  if(row.title.length<6)return err.textContent="Add a short listing title, for example “2 BHK with park view”.";
+  if(!(row.carpet_sqft>=50))return err.textContent="Enter the carpet area in sq ft.";
+  if(!(row.normal_price>0&&row.deal_price>0))return err.textContent="Enter both the normal price and the deal price.";
+  if(row.deal_price>=row.normal_price)return err.textContent="The deal price must be lower than the normal price.";
+  if(dl==null||dl<0||dl>90)return err.textContent="Pick a deal end date within the next 90 days.";
+  if(!S.photos.length)return err.textContent="Add at least one photo.";
+  if(!$("pp-agree").checked)return err.textContent="Tick the confirmation box to submit.";
+  const btn=$("pp-submit"),prog=$("pp-progress");btn.disabled=true;
+  try{
+    for(let k=0;k<S.photos.length;k++){prog.textContent=`Uploading photo ${k+1} of ${S.photos.length}…`;row.images.push(await api.upload(row.id,S.photos[k].file,`photo-${k+1}.jpg`))}
+    if(S.video){prog.textContent="Uploading video… keep this page open.";const ext=(S.video.name.split(".").pop()||"mp4").toLowerCase().replace(/[^a-z0-9]/g,"");row.video=await api.upload(row.id,S.video,"video."+ext)}
+    prog.textContent="Saving…";
+    await api.submitProperty(row,ct);
+    contact=Object.assign(contact,{name:ct.owner_name,phone:ct.owner_phone,email:ct.owner_email||contact.email});save("iy_contact",contact);
+    const title=row.title;
+    $("postForm").reset();S.photos=[];S.video=null;setupPostForm();$("pp-oname").value=contact.name;$("pp-ophone").value=contact.phone;$("pp-oemail").value=ct.owner_email;
+    if(S.isAdmin)await loadAdmin();render();
+    const done=$("pp-done");done.innerHTML=`${ICON_CHECK}<span>Thank you! "${esc(title)}" was sent for approval. The Indoyards team will call you on +91 ${esc(fmtPhone(ct.owner_phone))} and it goes live once approved. You can post another property below.</span>`;done.hidden=false;
+    window.scrollTo({top:0});toast("Submitted for approval");
+  }catch(x){err.textContent="Couldn't submit: "+((x&&x.message)||"check your connection and try again.")}
+  finally{btn.disabled=false;prog.textContent=""}
+}
+function setupPostForm(){
+  $("pp-area").innerHTML=AREAS.map(a=>`<option>${esc(a)}</option>`).join("");
+  $("pp-amen").innerHTML=AMENITIES.map((a,i)=>`<label><input type="checkbox" id="pp-am-${i}" value="${esc(a)}">${esc(a)}</label>`).join("");
+  $("pp-furnish").innerHTML=FURNISH.map(f=>`<option>${f}</option>`).join("");
+  $("pp-ends").value=inDays(30);$("pp-ends").min=inDays(0);$("pp-ends").max=inDays(90);
+  $("pp-vhint").textContent=`MP4 or MOV, up to ${CONFIG.MAX_VIDEO_MB} MB. A 30–60 second walkthrough on your phone works well.`;
+  syncPostForm();renderMedia();
+}
+function syncPostForm(){
+  const cat=$("pp-cat").value,deal=$("pp-deal").value;
+  $("pp-bhk-wrap").hidden=cat!=="residential";$("pp-ptype-wrap").hidden=cat==="residential";$("pp-dep-wrap").hidden=deal!=="lease";
+  $("pp-mrp-l").textContent=deal==="lease"?"Normal rent (₹ per month)":"Normal price (₹)";
+  $("pp-price-l").textContent=deal==="lease"?"Indoyards deal rent (₹ per month)":"Indoyards deal price (₹)";
+  $("pp-avail-l").textContent=deal==="lease"?"Available from":"Possession";
+  const m=Number($("pp-mrp").value),p=Number($("pp-price").value);
+  $("pp-mrp-p").textContent=m?amt(m)+per(deal):"";
+  $("pp-price-p").textContent=p?amt(p)+per(deal)+(m&&p<m?" · "+Math.round((m-p)/m*100)+"% off":""):"";
+}
+
+/* ---------- admin ---------- */
+async function loadAdmin(){try{S.admin=await api.adminLoad()}catch(e){toast("Couldn't load admin data: "+(e.message||""))}}
+function contactBox(c,label){c=one(c);if(!c)return `<div class="notice">${label?esc(label)+": ":""}no contact saved</div>`;
+  return `<div class="contact">${label?`<span class="cmeta">${esc(label)}</span><br>`:""}<b>${esc(c.owner_name||c.name||"—")}</b><br><span class="num">+91 ${esc(fmtPhone(c.owner_phone||c.phone))}</span>${(c.owner_email||c.email)?`<br>${esc(c.owner_email||c.email)}`:""}</div>`}
+function propKV(s){
+  const kv=[["Type",catLabel(s.category)+" · "+(s.deal==="lease"?"Lease":"Sale")],["Locality",(s.landmark?s.landmark+", ":"")+s.locality],["Configuration",bhkLabel(s)],["Carpet area",Number(s.carpet_sqft).toLocaleString("en-IN")+" sq ft"],
+    ["Normal price",amt(s.normal_price)+per(s.deal)],["Deal price",amt(s.deal_price)+per(s.deal)+" ("+offPct(s)+"% off)"],["Deal valid until",s.deal_ends||"—"],["Furnishing",s.furnishing],
+    [s.deal==="lease"?"Available":"Possession",s.possession||"—"],["Floor",s.floor||"—"],["Posted by",s.posted_by]];
+  if(s.deposit)kv.push(["Deposit",amt(s.deposit)]);if(s.rera)kv.push(["MahaRERA",s.rera]);
+  return `<div class="kv num">${kv.map(([k,v])=>`<div><span>${esc(k)}</span>${esc(v)}</div>`).join("")}</div>`;
+}
+const STATUSES=["New","Called","Visit fixed","Deal closed","Not interested"];
+function statusSel(table,x){return `<label class="fsel" style="max-width:220px"><span class="flabel">Status</span><select data-act="rowStatus" data-table="${table}" data-id="${esc(x.id)}">${STATUSES.map(s=>`<option${s===x.status?" selected":""}>${s}</option>`).join("")}</select></label>`}
+function renderAdmin(){
+  if(!S.user){$("atabs").innerHTML="";$("admin").innerHTML="";return}
+  if(!S.isAdmin){$("atabs").innerHTML="";$("admin").innerHTML='<div class="notice">This email is not an Indoyards admin. Add it to the admins table in the database.</div>';return}
+  const A=S.admin;
+  const tabs=[["pending","Waiting for approval",A.pending.length],["reqs","Requirements",A.reqs.length],["leads","Interested people",A.leads.length],["live","Live properties",A.live.length]];
+  $("atabs").innerHTML=`<div class="seg" role="group" aria-label="Admin sections">${tabs.map(([id,l,n])=>`<button data-act="atab" data-v="${id}" aria-pressed="${S.atab===id}">${l} (${n})</button>`).join("")}</div>
+    <button class="linkbtn" data-act="arefresh">Refresh</button>`;
+  let h="";
+  if(S.atab==="pending"){
+    h=A.pending.length?A.pending.map(s=>`<div class="acard"><div class="tags"><span class="tag hot">Waiting</span><span class="tag">Sent ${fmtD(s.created_at)}</span></div>
+      <h3>${esc(s.title)} · ${esc(s.property_name)}</h3>
+      ${(s.images||[]).length?`<div class="mstrip">${s.images.map(u=>`<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="Submitted photo"></a>`).join("")}</div>`:'<div class="notice">No photos</div>'}
+      ${s.video?`<video src="${esc(s.video)}" controls preload="metadata" style="max-width:420px;width:100%;border-radius:10px"></video>`:""}
+      ${propKV(s)}
+      ${s.amenities&&s.amenities.length?`<div class="amen">${s.amenities.map(a=>`<span>${esc(a)}</span>`).join("")}</div>`:""}
+      ${s.description?`<p style="margin:0;white-space:pre-line"><b>Description:</b> ${esc(s.description)}</p>`:""}
+      ${s.comments?`<p style="margin:0;white-space:pre-line"><b>Comments:</b> ${esc(s.comments)}</p>`:""}
+      ${contactBox(s.property_contacts,"Owner")}
+      ${S.reject===s.id?`<label class="field"><span>Reason (shown to the poster, optional)</span><input id="rej-${esc(s.id)}" maxlength="140" placeholder="e.g. Discount too small, photos unclear"></label>
+        <div class="formfoot"><button class="btn bad" data-act="reject" data-id="${esc(s.id)}">Confirm disapprove</button><button class="linkbtn" data-act="rejcancel">Cancel</button></div>`:
+      `<div class="formfoot"><button class="btn" data-act="approve" data-id="${esc(s.id)}">Approve</button><button class="btn bad" data-act="rejask" data-id="${esc(s.id)}">Disapprove</button></div>`}
+    </div>`).join(""):'<div class="notice">Nothing waiting. New property submissions appear here for approval.</div>';
+  } else if(S.atab==="reqs"){
+    h=A.reqs.length?A.reqs.map(r=>`<div class="acard"><div class="tags"><span class="tag">${fmtD(r.created_at)}</span></div><h3>${esc(reqSummary(r))}</h3>
+      <div class="kv"><div><span>Budget</span>${esc(r.budget)}</div><div><span>Area</span>${esc(r.area_sqft)}</div><div><span>Furnishing</span>${esc(r.furnishing)}</div></div>
+      ${r.notes?`<p style="margin:0">${esc(r.notes)}</p>`:""}${contactBox(r)}${statusSel("requirements",r)}</div>`).join(""):'<div class="notice">No requirements yet.</div>';
+  } else if(S.atab==="leads"){
+    h=A.leads.length?A.leads.map(e=>{const p=e.properties||{};return `<div class="acard"><div class="tags"><span class="tag">${fmtD(e.created_at)}</span></div>
+      <h3>Interested in: ${esc(p.title||"Removed property")}${p.property_name?" · "+esc(p.property_name):""}${p.deal_price?" · "+amt(p.deal_price)+per(p.deal):""}</h3>
+      ${e.message?`<p style="margin:0">${esc(e.message)}</p>`:""}
+      <div class="kv">${contactBox(e,"Interested person")}${contactBox(e.owner,"Property owner")}</div>${statusSel("enquiries",e)}</div>`}).join(""):'<div class="notice">No one has tapped "I\'m interested" yet.</div>';
+  } else {
+    h=A.live.length?A.live.map(l=>{const c=one(l.property_contacts);return `<div class="mrow"><div><b>${esc(l.title)} · ${esc(l.property_name)}</b>${l.is_sample?' <span class="tag">Sample</span>':""}<div class="cmeta num">${amt(l.deal_price)}${per(l.deal)} (${offPct(l)}% off) · ${esc(l.locality)} · ${esc(endsText(l.deal_ends))}${c?" · "+esc(c.owner_name)+" +91 "+esc(fmtPhone(c.owner_phone)):""}</div></div>
+      <button class="btn bad sm" data-act="unlist" data-id="${esc(l.id)}">${S.reject==="u"+l.id?"Tap again to take down":"Take down"}</button></div>`}).join(""):'<div class="notice">No live properties. Approve a submission to publish it.</div>';
+  }
+  $("admin").innerHTML=`<div style="display:flex;flex-direction:column;gap:12px">${h}</div>`;
+}
+function updateBadge(){const n=S.isAdmin?S.admin.pending.length:0;const b=$("pendingBadge");b.hidden=!n;b.textContent=n}
+
+/* ---------- views & events ---------- */
+const VIEWS=["deals","requirement","post","admin"];
+function showView(v){if(!VIEWS.includes(v))v="deals";S.view=v;VIEWS.forEach(x=>$("v-"+x).hidden=x!==v);render();window.scrollTo({top:0})}
+function render(){
+  if(S.view==="deals")renderDeals();
+  else if(S.view==="post"){if(!$("pp-oname").value)$("pp-oname").value=contact.name;if(!$("pp-ophone").value)$("pp-ophone").value=contact.phone;if(!$("pp-oemail").value)$("pp-oemail").value=contact.email}
+  else if(S.view==="admin"){refreshVerify();renderAdmin()}
+  updateBadge();
+}
+function resetFilterInputs(){$("f-q").value=S.q;$("f-sqft").value=S.sqft;$("f-furnish").value=S.furnish;$("f-by").value=S.by;$("f-sort").value=S.sort}
+async function refreshProps(){try{S.props=await api.listApproved();S.state="ok"}catch(e){S.state="error"}render()}
+
+document.addEventListener("click",async e=>{
+  const t=e.target.closest("[data-act]");if(!t||t.tagName==="SELECT")return;
+  const a=t.dataset.act,id=t.dataset.id;
+  if(t.tagName==="A")e.preventDefault();
+  switch(a){
+    case "view":showView(t.dataset.view);break;
+    case "requirement":openRequirement();break;
+    case "admin":showView("admin");break;
+    case "cat":S.cat=t.dataset.v;S.bhk=[];S.sel=null;S.enquire=null;S.img=0;renderDeals();break;
+    case "deal":S.deal=t.dataset.v;S.budget="any";S.sel=null;S.enquire=null;S.img=0;renderDeals();break;
+    case "area":S.area=t.dataset.v;S.sel=null;S.img=0;renderDeals();break;
+    case "bhk":{const v=t.dataset.v;S.bhk=S.bhk.includes(v)?S.bhk.filter(x=>x!==v):S.bhk.concat(v);S.sel=null;renderDeals();break}
+    case "reset":Object.assign(S,{area:"all",bhk:[],budget:"any",sqft:"any",furnish:"any",by:"any",q:"",sort:"discount",sel:null});resetFilterInputs();renderDeals();break;
+    case "select":if(S.sel!==id)S.img=0;S.sel=id;if(S.enquire!==id)S.enquire=null;renderDeals();if(window.innerWidth<900)$("detail").scrollIntoView({behavior:"smooth",block:"start"});break;
+    case "img":S.img=Number(t.dataset.k)||0;renderDeals();break;
+    case "enquire":S.enquire=S.enquire===id?null:id;renderDeals();break;
+    case "sendEnq":{const err=$("enq-err");err.textContent="";const c=readContact("enq",err);if(!c)break;t.disabled=true;
+      try{await api.sendLead({property_id:id,name:c.name,phone:c.phone,email:c.email,message:hidePhones($("enq-msg").value.trim())});S.enquire=null;renderDeals();toast("Sent. Indoyards will call you to arrange a visit.");if(S.isAdmin)loadAdmin().then(render)}
+      catch(x){err.textContent="Couldn't send right now. Try again.";t.disabled=false}break}
+    case "rqcat":S.rq.cat=t.dataset.v;S.rq.bhk=[];renderRqChips();break;
+    case "rqdeal":S.rq.deal=t.dataset.v;renderRqChips("any");break;
+    case "rqarea":S.rq.area=t.dataset.v;renderRqChips();break;
+    case "rqbhk":{const v=t.dataset.v;S.rq.bhk=S.rq.bhk.includes(v)?S.rq.bhk.filter(x=>x!==v):S.rq.bhk.concat(v);renderRqChips();break}
+    case "code-send":codeSend(t.dataset.scope);break;
+    case "code-check":codeCheck(t.dataset.scope);break;
+    case "code-change":delete S.otp[t.dataset.scope];refreshVerify();break;
+    case "signout":await api.signOut();S.user=null;S.isAdmin=false;$("adminBtn").hidden=true;render();break;
+    case "rmphoto":S.photos.splice(Number(t.dataset.k),1);renderMedia();break;
+    case "rmvideo":S.video=null;renderMedia();break;
+    case "atab":S.atab=t.dataset.v;S.reject=null;renderAdmin();break;
+    case "arefresh":await loadAdmin();render();toast("Refreshed");break;
+    case "approve":t.disabled=true;try{await api.setStatus(id,"approved");await Promise.all([loadAdmin(),refreshProps()]);render();toast("Approved. The property is now live.")}catch(x){toast("Couldn't approve: "+(x.message||""));t.disabled=false}break;
+    case "rejask":S.reject=id;renderAdmin();break;
+    case "rejcancel":S.reject=null;renderAdmin();break;
+    case "reject":{const inp=$("rej-"+id);t.disabled=true;try{await api.setStatus(id,"rejected",inp?inp.value.trim():"");S.reject=null;await loadAdmin();render();toast("Disapproved")}catch(x){toast("Couldn't update: "+(x.message||""));t.disabled=false}break}
+    case "unlist":if(S.reject!=="u"+id){S.reject="u"+id;renderAdmin();break}
+      S.reject=null;try{await api.setStatus(id,"removed");await Promise.all([loadAdmin(),refreshProps()]);render();toast("Taken down")}catch(x){toast("Couldn't update: "+(x.message||""))}break;
+  }
+});
+document.addEventListener("change",async e=>{
+  const t=e.target;
+  if(t.dataset&&t.dataset.act==="rowStatus"){try{await api.setRowStatus(t.dataset.table,t.dataset.id,t.value);toast("Status updated")}catch(x){toast("Couldn't update status")}}
+});
+$("f-q").addEventListener("input",e=>{S.q=e.target.value;S.sel=null;renderDeals()});
+[["f-budget","budget"],["f-sqft","sqft"],["f-furnish","furnish"],["f-by","by"],["f-sort","sort"]].forEach(([id,k])=>$(id).addEventListener("change",e=>{S[k]=e.target.value;S.sel=null;renderDeals()}));
+["pp-cat","pp-deal","pp-mrp","pp-price"].forEach(id=>$(id).addEventListener("input",syncPostForm));
+$("postForm").addEventListener("submit",postProperty);
+$("reqForm").addEventListener("submit",postRequirement);
+function measure(){document.documentElement.style.setProperty("--hh",$("top").offsetHeight+"px")}
+window.addEventListener("resize",measure);
+
+/* ---------- start ---------- */
+$("tagline").textContent=CONFIG.TAGLINE;
+$("phoneText").textContent="+91 "+fmtPhone(CONFIG.CONTACT_PHONE);
+$("phoneLink").href="https://wa.me/91"+CONFIG.CONTACT_PHONE;$("phoneLink").target="_blank";$("phoneLink").rel="noopener";
+$("demoBanner").hidden=LIVE;
+$("f-sqft").innerHTML=opts(SQFT,"any");
+$("f-furnish").innerHTML=opts([["any","Any"]].concat(FURNISH.slice(0,5).map(f=>[f,f])),"any");
+setupPostForm();measure();
+const h=(location.hash||"").slice(1);
+showView({"post-property":"post","admin":"admin"}[h]||"deals");
+if(h==="post-requirement")openRequirement();
+refreshProps();
+api.currentUser().then(u=>{S.user=u;if(u)afterSignIn();else render()});
+if(LIVE)sb.auth.onAuthStateChange((ev,session)=>{const u=session&&session.user;const nu=u?{id:u.id,email:u.email}:null;if((nu&&nu.id)!==(S.user&&S.user.id)){S.user=nu;if(nu)afterSignIn();else{S.isAdmin=false;$("adminBtn").hidden=true;render()}}});
+})();
+</script>
+</body>
+</html>
