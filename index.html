@@ -206,6 +206,10 @@ legend{font-weight:800;font-family:var(--display);font-size:17px;padding:0 6px}
 
 footer{border-top:1px solid var(--line);padding-block:18px;color:var(--muted);font-size:13px}
 footer .wrap{display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between}
+footer .footlinks{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:16px}
+.footlinks b{color:var(--fg)}.footlinks ul{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:4px}
+.footlinks a{color:var(--muted);text-decoration:none}.footlinks a:hover{color:var(--accent);text-decoration:underline}
+.spacer{flex:1 1 0}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:12px 18px;border-radius:12px;font-weight:700;font-size:14px;z-index:50;max-width:calc(100% - 32px);box-shadow:0 6px 24px rgba(0,0,0,.25)}
 </style>
 </head>
@@ -382,7 +386,7 @@ footer .wrap{display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-betw
 </section>
 </main>
 
-<footer><div class="wrap"><span>© Indoyards · Properties at discount</span><span class="num">Call / WhatsApp +91 81800 53763 · <button class="linkbtn" data-act="admin">Admin login</button></span></div></footer>
+<footer><nav class="wrap footlinks" id="footLinks" aria-label="Popular searches" hidden></nav><div class="wrap"><span>© Indoyards · Properties at discount</span><span class="num">Call / WhatsApp +91 81800 53763 · <button class="linkbtn" data-act="admin">Admin login</button></span></div></footer>
 <div class="toast" id="toast" role="status" hidden></div>
 
 <script>
@@ -393,6 +397,7 @@ footer .wrap{display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-betw
 const CONFIG = {
   SUPABASE_URL: "https://vjzfpqflmthoshcfxial.supabase.co/rest/v1/",           // e.g. "https://abcdxyz.supabase.co"
   SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZqemZwcWZsbXRob3NoY2Z4aWFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyNzkxMTYsImV4cCI6MjA5Nzg1NTExNn0.kPWSiuv-7dapFHVzGb5Ephh1MLRIiT_nWXSZnaqflHc",      // the "anon public" key
+  SITE_URL: "https://indoyards.com",   // your live web address (used for property links and sharing)
   CONTACT_PHONE: "8180053763",
   TAGLINE: "Mehenga Ghar, Saste Daam!",
   LOCALITIES: ["Baner","Hinjewadi","Wakad"],
@@ -437,7 +442,7 @@ const S={view:"deals",cat:"residential",deal:"sale",area:"all",bhk:[],budget:"an
   admin:{pending:[],live:[],reqs:[],leads:[]},rq:{cat:"residential",deal:"sale",area:"Any",bhk:[]},
   photos:[],video:null,otp:{}};
 let contact=load("iy_contact",{name:"",phone:"",email:""});
-const DEMO={props:SAMPLES.slice(),contacts:{},reqs:[],leads:[],user:null,code:null,email:null};
+const DEMO={props:SAMPLES.slice(),contacts:{},reqs:[],leads:[],seo:[],user:null,code:null,email:null};
 
 function load(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
 function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
@@ -531,6 +536,29 @@ const api={
     if(!LIVE){const p=DEMO.props.find(x=>x.id===id);if(p)Object.assign(p,patch);return}
     const {error}=await sb.from("properties").update(patch).eq("id",id);if(error)throw error;
   },
+  async seoList(){
+    if(!LIVE)return DEMO.seo.slice();
+    const {data,error}=await sb.from("seo_pages").select("*").order("h1");if(error)throw error;return data;
+  },
+  async seoPublished(){
+    if(!LIVE)return DEMO.seo.filter(p=>p.status==="published");
+    const {data}=await sb.from("seo_pages").select("slug,h1,filters").eq("status","published").order("h1").limit(300);return data||[];
+  },
+  async seoSave(id,row){
+    const now=new Date().toISOString();
+    if(!LIVE){const i=DEMO.seo.findIndex(x=>x.id===id);if(i>=0)DEMO.seo[i]=Object.assign({},DEMO.seo[i],row,{updated_at:now});else DEMO.seo.push(Object.assign({id:newId(),created_at:now,updated_at:now},row));return}
+    const r=id?await sb.from("seo_pages").update(row).eq("id",id):await sb.from("seo_pages").insert(row);
+    if(r.error)throw r.error;
+  },
+  async seoInsertMany(rows){
+    const now=new Date().toISOString();
+    if(!LIVE){rows.forEach(r=>DEMO.seo.push(Object.assign({id:newId(),created_at:now,updated_at:now},r)));return}
+    const {error}=await sb.from("seo_pages").insert(rows);if(error)throw error;
+  },
+  async seoDelete(id){
+    if(!LIVE){DEMO.seo=DEMO.seo.filter(x=>x.id!==id);return}
+    const {error}=await sb.from("seo_pages").delete().eq("id",id);if(error)throw error;
+  },
   async setRowStatus(table,id,status){
     if(!LIVE){const arr=table==="requirements"?DEMO.reqs:DEMO.leads;const x=arr.find(y=>y.id===id);if(x)x.status=status;return}
     const {error}=await sb.from(table).update({status}).eq("id",id);if(error)throw error;
@@ -611,7 +639,10 @@ function renderDetail(l){
         <span class="save">You save ${amt(l.normal_price-l.deal_price)}${per(l.deal)} · ${offPct(l)}% OFF</span>
       </div>
     </div>
-    <div class="formfoot"><button class="btn deal" data-act="enquire" data-id="${esc(l.id)}">${enq?"Close":"I'm interested"}</button><span class="cmeta num">or call / WhatsApp +91 ${esc(fmtPhone(CONFIG.CONTACT_PHONE))}</span></div>
+    <div class="formfoot"><button class="btn deal" data-act="enquire" data-id="${esc(l.id)}">${enq?"Close":"I'm interested"}</button>
+      ${LIVE&&l.slug?`<a class="btn ghost" href="https://wa.me/?text=${encodeURIComponent(l.title+", "+l.locality+" – "+amt(l.deal_price)+per(l.deal)+" ("+offPct(l)+"% off) on Indoyards: "+CONFIG.SITE_URL+"/property/"+l.slug)}" target="_blank" rel="noopener">Share on WhatsApp</a>
+      <a class="linkbtn" href="/property/${esc(l.slug)}">Open full page</a>`:""}
+      <span class="cmeta num">or call / WhatsApp +91 ${esc(fmtPhone(CONFIG.CONTACT_PHONE))}</span></div>
     ${enq?`<div class="inline">${contactFields("enq")}
       <label class="field"><span>Message (optional)</span><textarea id="enq-msg" maxlength="400" placeholder="e.g. Can visit this Saturday morning"></textarea></label>
       <p class="err" id="enq-err"></p>
@@ -813,7 +844,7 @@ function syncPostForm(){
 }
 
 /* ---------- admin ---------- */
-async function loadAdmin(){try{S.admin=await api.adminLoad()}catch(e){toast("Couldn't load admin data: "+(e.message||""))}}
+async function loadAdmin(){try{S.admin=await api.adminLoad();S.seo=await api.seoList()}catch(e){toast("Couldn't load admin data: "+(e.message||""))}}
 function contactBox(c,label){c=one(c);if(!c)return `<div class="notice">${label?esc(label)+": ":""}no contact saved</div>`;
   return `<div class="contact">${label?`<span class="cmeta">${esc(label)}</span><br>`:""}<b>${esc(c.owner_name||c.name||"—")}</b><br><span class="num">+91 ${esc(fmtPhone(c.owner_phone||c.phone))}</span>${(c.owner_email||c.email)?`<br>${esc(c.owner_email||c.email)}`:""}</div>`}
 function propKV(s){
@@ -829,7 +860,7 @@ function renderAdmin(){
   if(!S.user){$("atabs").innerHTML="";$("admin").innerHTML="";return}
   if(!S.isAdmin){$("atabs").innerHTML="";$("admin").innerHTML='<div class="notice">This email is not an Indoyards admin. Add it to the admins table in the database.</div>';return}
   const A=S.admin;
-  const tabs=[["pending","Waiting for approval",A.pending.length],["reqs","Requirements",A.reqs.length],["leads","Interested people",A.leads.length],["live","Live properties",A.live.length]];
+  const tabs=[["pending","Waiting for approval",A.pending.length],["reqs","Requirements",A.reqs.length],["leads","Interested people",A.leads.length],["live","Live properties",A.live.length],["seo","Google pages",S.seo.length]];
   $("atabs").innerHTML=`<div class="seg" role="group" aria-label="Admin sections">${tabs.map(([id,l,n])=>`<button data-act="atab" data-v="${id}" aria-pressed="${S.atab===id}">${l} (${n})</button>`).join("")}</div>
     <button class="linkbtn" data-act="arefresh">Refresh</button>`;
   let h="";
@@ -856,13 +887,161 @@ function renderAdmin(){
       <h3>Interested in: ${esc(p.title||"Removed property")}${p.property_name?" · "+esc(p.property_name):""}${p.deal_price?" · "+amt(p.deal_price)+per(p.deal):""}</h3>
       ${e.message?`<p style="margin:0">${esc(e.message)}</p>`:""}
       <div class="kv">${contactBox(e,"Interested person")}${contactBox(e.owner,"Property owner")}</div>${statusSel("enquiries",e)}</div>`}).join(""):'<div class="notice">No one has tapped "I\'m interested" yet.</div>';
+  } else if(S.atab==="seo"){
+    h=S.seoEdit?seoEditorHTML():seoListHTML();
   } else {
     h=A.live.length?A.live.map(l=>{const c=one(l.property_contacts);return `<div class="mrow"><div><b>${esc(l.title)} · ${esc(l.property_name)}</b>${l.is_sample?' <span class="tag">Sample</span>':""}<div class="cmeta num">${amt(l.deal_price)}${per(l.deal)} (${offPct(l)}% off) · ${esc(l.locality)} · ${esc(endsText(l.deal_ends))}${c?" · "+esc(c.owner_name)+" +91 "+esc(fmtPhone(c.owner_phone)):""}</div></div>
       <button class="btn bad sm" data-act="unlist" data-id="${esc(l.id)}">${S.reject==="u"+l.id?"Tap again to take down":"Take down"}</button></div>`}).join(""):'<div class="notice">No live properties. Approve a submission to publish it.</div>';
   }
   $("admin").innerHTML=`<div style="display:flex;flex-direction:column;gap:12px">${h}</div>`;
+  if(S.atab==="seo"&&S.seoEdit)seoLive();
 }
 function updateBadge(){const n=S.isAdmin?S.admin.pending.length:0;const b=$("pendingBadge");b.hidden=!n;b.textContent=n}
+
+/* ---------- Google pages (admin) ---------- */
+S.seo=[];S.seoEdit=null;S.seoConfirm=null;S.footPages=[];
+const SPACE_TYPES=["Office","Shop","Showroom","Co-working","Plot","Warehouse","Other"];
+const slugify=t=>String(t||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,90).replace(/-+$/,"");
+const clip=(s,n)=>{s=String(s||"").replace(/\s+/g," ").trim();return s.length>n?s.slice(0,n-1).trimEnd()+"…":s};
+function matchFilters(p,f){f=f||{};
+  if(f.category&&p.category!==f.category)return false;if(f.deal&&p.deal!==f.deal)return false;
+  if(f.locality&&p.locality!==f.locality)return false;if(f.space_type&&p.space_type!==f.space_type)return false;
+  if(Array.isArray(f.bhk)&&f.bhk.length&&!f.bhk.some(b=>Number(b)>=4?p.bhk>=4:p.bhk===Number(b)))return false;
+  if(f.min_price&&p.deal_price<Number(f.min_price))return false;if(f.max_price&&p.deal_price>Number(f.max_price))return false;return true}
+const liveCount=f=>S.props.filter(p=>isLive(p)&&matchFilters(p,f)).length;
+function filterSummary(f){f=f||{};const parts=[];
+  parts.push(f.category?catLabel(f.category):"All types");if(f.deal)parts.push(f.deal==="lease"?"Rent":"Sale");
+  if(f.bhk&&f.bhk.length)parts.push(f.bhk.map(b=>b>=4?"4+":b).join("/")+" BHK");if(f.space_type)parts.push(f.space_type);
+  parts.push(f.locality||"All areas");if(f.min_price)parts.push("from "+amt(f.min_price));if(f.max_price)parts.push("up to "+amt(f.max_price));return parts.join(" · ")}
+
+const AREA_INTRO={
+  Baner:"Baner is one of west Pune's most popular neighbourhoods, close to Balewadi, Aundh and the Mumbai–Bangalore highway, with an easy drive to Hinjewadi.",
+  Hinjewadi:"Hinjewadi is home to the Rajiv Gandhi Infotech Park, so homes and workspaces here stay in steady demand from IT professionals and companies.",
+  Wakad:"Wakad sits between Hinjewadi and the Mumbai–Bangalore highway, and is popular with IT professionals and families for its connectivity and wide choice of societies."
+};
+function makePage(f,what,whatPlural){
+  const loc=f.locality||"Pune";const verb=f.deal==="lease"?"Rent":"Sale";const lw=f.deal==="lease"?"rent":"price";
+  const h1=`${whatPlural} for ${verb} in ${loc}`;
+  let title=`${h1}${f.locality?", Pune":""} – Discounted | Indoyards`;if(title.length>70)title=`${h1}${f.locality?", Pune":""} | Indoyards`;if(title.length>70)title=clip(h1,57)+" | Indoyards";
+  const meta=clip(`Discounted ${whatPlural.toLowerCase()} for ${verb.toLowerCase()} in ${loc}${f.locality?", Pune":""}. See the normal ${lw} next to the Indoyards deal ${lw}, with photos. Owner numbers stay private.`,165);
+  const intro=[AREA_INTRO[f.locality]||"Indoyards lists properties in Baner, Hinjewadi and Wakad, all below their normal price.",
+    `Every ${what.toLowerCase()} on this page is listed below its normal ${lw}. Owners and builders set an Indoyards deal ${lw}, and our team checks each listing before it goes live.`,
+    "Owner phone numbers are never shown. Tap “I'm interested” on any property and we'll call you to arrange a visit."].join("\n\n");
+  const faqs=[
+    {q:`Are these ${whatPlural.toLowerCase()} really discounted?`,a:`Yes. Each listing shows the owner's normal ${lw} and the lower Indoyards deal ${lw}. We check listings before they go live.`},
+    {q:f.deal==="lease"?"Do tenants pay brokerage to Indoyards?":"Do buyers pay brokerage to Indoyards?",a:`No. ${f.deal==="lease"?"Tenants":"Buyers"} pay nothing to Indoyards. Owners pay our fee only when a deal closes.`},
+    {q:"How do I visit a property?",a:"Open the property and tap “I'm interested”, or call / WhatsApp +91 "+fmtPhone(CONFIG.CONTACT_PHONE)+". We'll set up a visit with the owner."}];
+  return {slug:slugify(h1),title,meta_description:meta,h1,intro,body:"",filters:f,faqs,status:"draft"};
+}
+function standardPages(){
+  const out=[];
+  out.push(makePage({category:"residential",deal:"lease"},"flat","Flats"));out.push(makePage({category:"residential",deal:"sale"},"flat","Flats"));
+  AREAS.forEach(L=>{
+    ["lease","sale"].forEach(d=>{
+      out.push(makePage({category:"residential",deal:d,locality:L},"flat","Flats"));
+      [1,2,3].forEach(b=>out.push(makePage({category:"residential",deal:d,locality:L,bhk:[b]},`${b} BHK flat`,`${b} BHK Flats`)));
+    });
+    out.push(makePage({category:"commercial",deal:"lease",locality:L,space_type:"Office"},"office space","Office Space"));
+    out.push(makePage({category:"commercial",deal:"lease",locality:L,space_type:"Shop"},"shop","Shops"));
+    out.push(makePage({category:"commercial",deal:"sale",locality:L},"commercial property","Commercial Property"));
+    out.push(makePage({category:"other",deal:"sale",locality:L,space_type:"Plot"},"plot","Plots"));
+  });
+  return out;
+}
+function seoListHTML(){
+  const have=new Set(S.seo.map(p=>p.slug));const fresh=standardPages().filter(p=>!have.has(p.slug));
+  const list=S.seo.slice().sort((a,b)=>(a.filters.locality||"").localeCompare(b.filters.locality||"")||a.h1.localeCompare(b.h1));
+  return `<div class="notice">Google pages are search landing pages like <b>${esc(CONFIG.SITE_URL.replace(/^https?:\/\//,""))}/pune/2-bhk-flats-for-rent-in-wakad</b>. Each one lists the live properties matching its filters, with search on top. Every approved property also gets its own page automatically. Pages appear in the sitemap for Google as soon as you publish them.</div>
+  <div class="formfoot"><button class="btn" data-act="seonew">New Google page</button>
+    ${fresh.length?`<button class="btn ghost" data-act="seogen">Create ${fresh.length} standard area pages as drafts</button>`:""}
+    <a class="linkbtn" href="${esc(CONFIG.SITE_URL)}/sitemap.xml" target="_blank" rel="noopener">View sitemap</a></div>
+  ${list.length?list.map(p=>{const n=liveCount(p.filters);return `<div class="mrow"><div style="min-width:0;flex:1 1 300px"><b>${esc(p.h1)}</b>
+      <div class="cmeta">/pune/${esc(p.slug)} · ${esc(filterSummary(p.filters))} · <span class="num">${n} live ${n===1?"property":"properties"}</span></div></div>
+    <div class="formfoot"><span class="tag ${p.status==="published"?"ok":"hot"}">${p.status==="published"?"Published":"Draft"}</span>
+      <button class="btn ghost sm" data-act="seoedit" data-id="${esc(p.id)}">Edit</button>
+      <button class="btn ghost sm" data-act="seotoggle" data-id="${esc(p.id)}">${p.status==="published"?"Unpublish":"Publish"}</button>
+      ${p.status==="published"&&LIVE?`<a class="btn ghost sm" href="${esc(CONFIG.SITE_URL)}/pune/${esc(p.slug)}" target="_blank" rel="noopener">View</a>`:""}</div></div>`}).join(""):
+    '<div class="notice">No Google pages yet. Click "Create standard area pages" to start with ready-made drafts for every area.</div>'}`;
+}
+function seoEditorHTML(){
+  const e=S.seoEdit,f=e.filters||{};
+  const sel=(id,list,cur)=>`<select id="${id}">${list.map(([v,l])=>`<option value="${esc(v)}"${String(v)===String(cur||"")?" selected":""}>${esc(l)}</option>`).join("")}</select>`;
+  return `<div class="acard">
+  <h3>${e.id?"Edit Google page":"New Google page"}</h3>
+  <div class="fgrid">
+    <label class="field wide"><span>Page heading (H1)</span><input id="se-h1" maxlength="90" value="${esc(e.h1)}" placeholder="e.g. 2 BHK Flats for Rent in Wakad"></label>
+    <label class="field wide"><span>Web address</span><span class="phone"><span>/pune/</span><input id="se-slug" maxlength="90" value="${esc(e.slug)}"></span><small>Lowercase words joined by dashes. Don't change it after publishing, or Google loses the page.</small></label>
+    <label class="field wide"><span>Google title <span class="cmeta num" id="se-title-n"></span></span><input id="se-title" maxlength="70" value="${esc(e.title)}"><small>Aim for 50–60 characters. Put the main search words first.</small></label>
+    <label class="field wide"><span>Google description <span class="cmeta num" id="se-desc-n"></span></span><textarea id="se-desc" maxlength="170" style="min-height:70px">${esc(e.meta_description)}</textarea><small>120–160 characters that make people click.</small></label>
+  </div>
+  <div class="field"><span>Google preview</span><div id="se-preview" class="inline" style="gap:2px"></div></div>
+  <fieldset><legend>Which properties this page lists</legend>
+    <div class="fgrid">
+      <label class="field"><span>Property type</span>${sel("se-cat",[["","Any"],["residential","Residential"],["commercial","Commercial"],["other","Other"]],f.category)}</label>
+      <label class="field"><span>Sale or rent</span>${sel("se-deal",[["","Any"],["sale","Sale"],["lease","Rent / lease"]],f.deal)}</label>
+      <label class="field"><span>Locality</span>${sel("se-loc",[["","All areas"]].concat(AREAS.map(a=>[a,a])),f.locality)}</label>
+      <label class="field"><span>Kind of space</span>${sel("se-space",[["","Any"]].concat(SPACE_TYPES.map(a=>[a,a])),f.space_type)}</label>
+      <label class="field"><span>Min deal price (₹)</span><input id="se-min" type="number" min="0" value="${esc(f.min_price||"")}"></label>
+      <label class="field"><span>Max deal price (₹)</span><input id="se-max" type="number" min="0" value="${esc(f.max_price||"")}"></label>
+    </div>
+    <div class="field"><span>Bedrooms (residential)</span><div class="checks">${[1,2,3,4].map(b=>`<label><input type="checkbox" class="se-bhk" value="${b}"${(f.bhk||[]).map(Number).includes(b)?" checked":""}>${b===4?"4+":b} BHK</label>`).join("")}</div></div>
+    <p class="cmeta num" id="se-count" style="margin:0"></p>
+  </fieldset>
+  <label class="field"><span>Intro (shown above the listings)</span><textarea id="se-intro" maxlength="3000" style="min-height:140px">${esc(e.intro||"")}</textarea>
+    <small>Write it in your own words for each page: what the area is like, typical rents or prices, who it suits. Pages with copied text rank poorly. Leave a blank line between paragraphs.</small></label>
+  <label class="field"><span>More content (shown below the listings, optional)</span><textarea id="se-body" maxlength="8000" style="min-height:120px">${esc(e.body||"")}</textarea>
+    <small>Start a line with "## " for a sub-heading, or "- " for a bullet point.</small></label>
+  <fieldset><legend>Questions and answers</legend>
+    ${(e.faqs||[]).map((q,i)=>`<div class="fgrid" style="align-items:end"><label class="field"><span>Question ${i+1}</span><input id="se-fq-${i}" maxlength="150" value="${esc(q.q)}"></label>
+      <label class="field"><span>Answer</span><textarea id="se-fa-${i}" maxlength="600" style="min-height:60px">${esc(q.a)}</textarea></label>
+      <div><button type="button" class="linkbtn" data-act="faqdel" data-k="${i}">Remove</button></div></div>`).join("")}
+    <div><button type="button" class="btn ghost sm" data-act="faqadd">Add question</button></div>
+  </fieldset>
+  <label class="field" style="max-width:240px"><span>Status</span><select id="se-status"><option value="draft"${e.status!=="published"?" selected":""}>Draft (hidden)</option><option value="published"${e.status==="published"?" selected":""}>Published</option></select></label>
+  <p class="err" id="se-err" role="alert"></p>
+  <div class="formfoot"><button class="btn" data-act="seosave">Save page</button><button class="linkbtn" data-act="seocancel">Cancel</button>
+    ${e.id?`<span class="spacer"></span><button class="btn bad sm" data-act="seodel">${S.seoConfirm===e.id?"Tap again to delete":"Delete page"}</button>`:""}</div>
+  </div>`;
+}
+function collectSeo(){
+  const e=S.seoEdit;if(!e||!$("se-h1"))return e;
+  const v=id=>($(id)||{}).value||"";
+  e.h1=v("se-h1").trim();e.slug=slugify(v("se-slug"));e.title=v("se-title").trim();e.meta_description=v("se-desc").trim();
+  e.intro=v("se-intro").trim();e.body=v("se-body").trim();e.status=v("se-status");
+  const f={};if(v("se-cat"))f.category=v("se-cat");if(v("se-deal"))f.deal=v("se-deal");if(v("se-loc"))f.locality=v("se-loc");if(v("se-space"))f.space_type=v("se-space");
+  const b=[...document.querySelectorAll(".se-bhk:checked")].map(x=>Number(x.value));if(b.length)f.bhk=b;
+  if(Number(v("se-min")))f.min_price=Number(v("se-min"));if(Number(v("se-max")))f.max_price=Number(v("se-max"));
+  e.filters=f;
+  e.faqs=(e.faqs||[]).map((q,i)=>({q:v("se-fq-"+i).trim(),a:v("se-fa-"+i).trim()}));
+  return e;
+}
+function seoLive(){
+  const e=collectSeo();if(!e)return;
+  const t=$("se-title").value,d=$("se-desc").value;
+  $("se-title-n").textContent=`(${t.length}/70)`;$("se-desc-n").textContent=`(${d.length}/170)`;
+  $("se-preview").innerHTML=`<span class="cmeta">${esc(CONFIG.SITE_URL.replace(/^https?:\/\//,""))} › pune › ${esc(e.slug||"…")}</span>
+    <span style="font-size:19px;color:var(--accent);font-weight:600;line-height:1.3">${esc(clip(t||e.h1||"Page title",62))}</span>
+    <span class="cmeta" style="color:var(--fg)">${esc(clip(d||"Page description",160))}</span>`;
+  const n=liveCount(e.filters);$("se-count").textContent=`${filterSummary(e.filters)} · ${n} live ${n===1?"property matches":"properties match"} right now.`;
+}
+async function saveSeo(){
+  const e=collectSeo(),err=$("se-err");err.textContent="";
+  if(e.h1.length<5)return err.textContent="Add a page heading.";
+  if(!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(e.slug))return err.textContent="The web address can only use lowercase letters, numbers and dashes.";
+  if(S.seo.some(p=>p.slug===e.slug&&p.id!==e.id))return err.textContent="Another page already uses this web address.";
+  if(e.title.length<10||e.title.length>70)return err.textContent="The Google title needs 10–70 characters.";
+  if(e.meta_description.length<50||e.meta_description.length>170)return err.textContent="The Google description needs 50–170 characters.";
+  const row={slug:e.slug,title:e.title,meta_description:e.meta_description,h1:e.h1,intro:e.intro,body:e.body,filters:e.filters,faqs:e.faqs.filter(q=>q.q&&q.a),status:e.status};
+  try{await api.seoSave(e.id,row);S.seo=await api.seoList();S.seoEdit=null;renderAdmin();loadFooter();toast(row.status==="published"?"Page saved and published":"Draft saved")}
+  catch(x){err.textContent="Couldn't save: "+((x&&x.message)||"try again.")}
+}
+async function loadFooter(){
+  try{S.footPages=await api.seoPublished()}catch(e){S.footPages=[]}
+  const g={};S.footPages.forEach(p=>{const k=(p.filters&&p.filters.locality)||"Pune";(g[k]=g[k]||[]).push(p)});
+  const el=$("footLinks");if(!el)return;
+  el.innerHTML=LIVE?Object.keys(g).sort().map(k=>`<div><b>${esc(k)}</b><ul>${g[k].slice(0,14).map(p=>`<li><a href="/pune/${esc(p.slug)}">${esc(p.h1)}</a></li>`).join("")}</ul></div>`).join(""):"";
+  el.hidden=!el.innerHTML;
+}
 
 /* ---------- views & events ---------- */
 const VIEWS=["deals","requirement","post","admin"];
@@ -905,7 +1084,19 @@ document.addEventListener("click",async e=>{
     case "signout":await api.signOut();S.user=null;S.isAdmin=false;$("adminBtn").hidden=true;render();break;
     case "rmphoto":S.photos.splice(Number(t.dataset.k),1);renderMedia();break;
     case "rmvideo":S.video=null;renderMedia();break;
-    case "atab":S.atab=t.dataset.v;S.reject=null;renderAdmin();break;
+    case "atab":S.atab=t.dataset.v;S.reject=null;S.seoEdit=null;renderAdmin();break;
+    case "seonew":S.seoConfirm=null;S.seoEdit={id:null,slug:"",title:"",meta_description:"",h1:"",intro:"",body:"",filters:{category:"residential",deal:"lease"},faqs:[],status:"draft",slugTouched:false};renderAdmin();window.scrollTo({top:0});break;
+    case "seoedit":{const p=S.seo.find(x=>x.id===id);if(!p)break;S.seoConfirm=null;S.seoEdit=JSON.parse(JSON.stringify(Object.assign({faqs:[],filters:{}},p,{slugTouched:true})));renderAdmin();window.scrollTo({top:0});break}
+    case "seocancel":S.seoEdit=null;S.seoConfirm=null;renderAdmin();break;
+    case "seosave":t.disabled=true;await saveSeo();t.disabled=false;break;
+    case "seodel":{const e=S.seoEdit;if(!e||!e.id)break;if(S.seoConfirm!==e.id){collectSeo();S.seoConfirm=e.id;renderAdmin();break}
+      try{await api.seoDelete(e.id);S.seo=await api.seoList();S.seoEdit=null;S.seoConfirm=null;renderAdmin();loadFooter();toast("Page deleted")}catch(x){toast("Couldn't delete: "+(x.message||""))}break}
+    case "seotoggle":{const p=S.seo.find(x=>x.id===id);if(!p)break;t.disabled=true;
+      try{await api.seoSave(p.id,{status:p.status==="published"?"draft":"published"});S.seo=await api.seoList();renderAdmin();loadFooter();toast(p.status==="published"?"Unpublished":"Published")}catch(x){toast("Couldn't update: "+(x.message||""));t.disabled=false}break}
+    case "seogen":{const have=new Set(S.seo.map(p=>p.slug));const rows=standardPages().filter(p=>!have.has(p.slug));if(!rows.length)break;t.disabled=true;
+      try{await api.seoInsertMany(rows);S.seo=await api.seoList();renderAdmin();toast(rows.length+" draft pages created. Edit each intro, then publish.")}catch(x){toast("Couldn't create pages: "+(x.message||""));t.disabled=false}break}
+    case "faqadd":collectSeo();S.seoEdit.faqs.push({q:"",a:""});renderAdmin();break;
+    case "faqdel":collectSeo();S.seoEdit.faqs.splice(Number(t.dataset.k),1);renderAdmin();break;
     case "arefresh":await loadAdmin();render();toast("Refreshed");break;
     case "approve":t.disabled=true;try{await api.setStatus(id,"approved");await Promise.all([loadAdmin(),refreshProps()]);render();toast("Approved. The property is now live.")}catch(x){toast("Couldn't approve: "+(x.message||""));t.disabled=false}break;
     case "rejask":S.reject=id;renderAdmin();break;
@@ -920,6 +1111,12 @@ document.addEventListener("change",async e=>{
   if(t.dataset&&t.dataset.act==="rowStatus"){try{await api.setRowStatus(t.dataset.table,t.dataset.id,t.value);toast("Status updated")}catch(x){toast("Couldn't update status")}}
 });
 $("f-q").addEventListener("input",e=>{S.q=e.target.value;S.sel=null;renderDeals()});
+["input","change"].forEach(ev=>$("admin").addEventListener(ev,e=>{
+  if(!S.seoEdit||!e.target.id&&!e.target.classList.contains("se-bhk"))return;
+  if(e.target.id==="se-slug")S.seoEdit.slugTouched=true;
+  if(e.target.id==="se-h1"&&!S.seoEdit.slugTouched)$("se-slug").value=slugify(e.target.value);
+  if(/^se-|se-bhk/.test(e.target.id||e.target.className))seoLive();
+}));
 [["f-budget","budget"],["f-sqft","sqft"],["f-furnish","furnish"],["f-by","by"],["f-sort","sort"]].forEach(([id,k])=>$(id).addEventListener("change",e=>{S[k]=e.target.value;S.sel=null;renderDeals()}));
 ["pp-cat","pp-deal","pp-mrp","pp-price"].forEach(id=>$(id).addEventListener("input",syncPostForm));
 $("postForm").addEventListener("submit",postProperty);
@@ -935,10 +1132,20 @@ $("demoBanner").hidden=LIVE;
 $("f-sqft").innerHTML=opts(SQFT,"any");
 $("f-furnish").innerHTML=opts([["any","Any"]].concat(FURNISH.slice(0,5).map(f=>[f,f])),"any");
 setupPostForm();measure();
+// Links from Google pages arrive as /?cat=residential&deal=lease&area=Wakad&bhk=2&q=...
+try{
+  const qs=new URLSearchParams(location.search);
+  if(CATS.some(c=>c[0]===qs.get("cat")))S.cat=qs.get("cat");
+  if(DEALS.some(d=>d[0]===qs.get("deal")))S.deal=qs.get("deal");
+  if(AREAS.includes(qs.get("area")))S.area=qs.get("area");
+  if(qs.get("bhk"))S.bhk=qs.get("bhk").split(",").filter(b=>["1","2","3","4"].includes(b));
+  if(qs.get("q")){S.q=qs.get("q").slice(0,80);$("f-q").value=S.q}
+  var wantReq=qs.get("req")==="1";
+}catch(e){}
 const h=(location.hash||"").slice(1);
 showView({"post-property":"post","admin":"admin"}[h]||"deals");
-if(h==="post-requirement")openRequirement();
-refreshProps();
+if(h==="post-requirement"||wantReq)openRequirement();
+refreshProps();loadFooter();
 api.currentUser().then(u=>{S.user=u;if(u)afterSignIn();else render()});
 if(LIVE)sb.auth.onAuthStateChange((ev,session)=>{const u=session&&session.user;const nu=u?{id:u.id,email:u.email}:null;if((nu&&nu.id)!==(S.user&&S.user.id)){S.user=nu;if(nu)afterSignIn();else{S.isAdmin=false;$("adminBtn").hidden=true;render()}}});
 })();
