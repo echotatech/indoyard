@@ -713,7 +713,7 @@ function verifyHTML(scope){
   if(S.user)return `<div class="verified">${ICON_CHECK}<span>Signed in as ${esc(S.user.email)}</span><button type="button" class="linkbtn" data-act="signout">Sign out</button></div>`;
   const o=S.otp[scope];
   if(!o||!o.sent)return `<div class="vbox"><h3>${title}</h3>
-    <p class="cmeta" style="margin:0">We email you a 6-digit code. No password needed.</p>
+    <p class="cmeta" style="margin:0">We'll email you a secure sign-in link. No password needed.</p>
     <label class="field" style="max-width:360px"><span>Email</span><input id="${scope}-vemail" type="email" autocomplete="email" value="${esc(o?o.email:contact.email)}"></label>
     <p class="err">${esc(o&&o.err||"")}</p>
     <div><button type="button" class="btn" data-act="code-send" data-scope="${scope}" ${o&&o.busy?"disabled":""}>${o&&o.busy?"Sending…":"Email me a sign-in link"}</button></div></div>`;
