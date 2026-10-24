@@ -31,8 +31,10 @@ module.exports = async function handler(req, res) {
     return res.status(400).send("Invalid property URL");
   }
 
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const anonKey = process.env.SUPABASE_ANON_KEY;
+  const supabaseUrl =
+  process.env.NEXT_PUBLIC_SUPABASE_URL;
+const anonKey =
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const siteUrl = (
     process.env.SITE_URL || "https://www.indoyard.com"
   ).replace(/\/+$/, "");
