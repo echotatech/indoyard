@@ -1,16 +1,9 @@
+
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "buildCommand": "",
   "outputDirectory": ".",
-  "rewrites": [
-    { "source": "/property/:slug", "destination": "/api/property?slug=:slug" },
-    { "source": "/sitemap.xml", "destination": "/api/sitemap" }
-  ]
-}
-
-{
-  "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
     "api/property.js": {
       "includeFiles": ["index.html"]
@@ -20,7 +13,10 @@
     {
       "source": "/property/:slug",
       "destination": "/api/property?slug=:slug"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap"
     }
   ]
 }
-
