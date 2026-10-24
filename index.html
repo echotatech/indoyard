@@ -663,7 +663,7 @@ function renderDetail(l){
     </div>
     <div class="formfoot"><button class="btn deal" data-act="enquire" data-id="${esc(l.id)}">${enq?"Close":"I'm interested"}</button>
       ${LIVE&&l.slug?`<a class="btn ghost" href="https://wa.me/?text=${encodeURIComponent(l.title+", "+l.locality+" – "+amt(l.deal_price)+per(l.deal)+" ("+offPct(l)+"% off) on Indoyards: "+CONFIG.SITE_URL+"/property/"+l.slug)}" target="_blank" rel="noopener">Share on WhatsApp</a>
-      <a class="linkbtn" href="/?property=${encodeURIComponent(l.slug)}">Open full page</a>`:""}
+      <a class="linkbtn" href="/property/${encodeURIComponent(l.slug)}">Open full page</a>`:""}
       <span class="cmeta num">or call / WhatsApp +91 ${esc(fmtPhone(CONFIG.CONTACT_PHONE))}</span></div>
     ${enq?`<div class="inline">${contactFields("enq")}
       <label class="field"><span>Message (optional)</span><textarea id="enq-msg" maxlength="400" placeholder="e.g. Can visit this Saturday morning"></textarea></label>
