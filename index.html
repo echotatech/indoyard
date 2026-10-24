@@ -641,7 +641,7 @@ function renderDetail(l){
     </div>
     <div class="formfoot"><button class="btn deal" data-act="enquire" data-id="${esc(l.id)}">${enq?"Close":"I'm interested"}</button>
       ${LIVE&&l.slug?`<a class="btn ghost" href="https://wa.me/?text=${encodeURIComponent(l.title+", "+l.locality+" – "+amt(l.deal_price)+per(l.deal)+" ("+offPct(l)+"% off) on Indoyards: "+CONFIG.SITE_URL+"/property/"+l.slug)}" target="_blank" rel="noopener">Share on WhatsApp</a>
-      <a class="linkbtn" href="/property/${esc(l.slug)}">Open full page</a>`:""}
+      <a class="linkbtn" href="/?property=${encodeURIComponent(l.slug)}">Open full page</a>`:""}
       <span class="cmeta num">or call / WhatsApp +91 ${esc(fmtPhone(CONFIG.CONTACT_PHONE))}</span></div>
     ${enq?`<div class="inline">${contactFields("enq")}
       <label class="field"><span>Message (optional)</span><textarea id="enq-msg" maxlength="400" placeholder="e.g. Can visit this Saturday morning"></textarea></label>
@@ -655,6 +655,58 @@ function renderDetail(l){
     ${(l.amenities&&l.amenities.length)?`<div class="dsec"><h2>Amenities</h2><div class="amen">${l.amenities.map(a=>`<span>${esc(a)}</span>`).join("")}</div></div>`:""}
   </div>`;
 }
+  
+function renderFullPropertyPage(slug) {
+  const property = S.props.find(
+    p => p.slug === slug && isLive(p)
+  );
+
+  // Hide the property listing and show a dedicated detail page.
+  $("v-deals").hidden = true;
+
+  let page = $("full-property-page");
+
+  if (!page) {
+    page = document.createElement("section");
+    page.id = "full-property-page";
+    page.className = "view wrap";
+    document.querySelector("main").appendChild(page);
+  }
+
+  page.hidden = false;
+
+  if (!property) {
+    page.innerHTML = `
+      <div class="panel">
+        <h2>Property not found</h2>
+        <p>This property may have been removed or is no longer available.</p>
+        <a class="btn" href="/">Back to properties</a>
+      </div>`;
+    return;
+  }
+
+  page.innerHTML = `
+    <button class="linkbtn back" id="full-property-back">
+      ← Back to properties
+    </button>
+    <article class="detail" id="full-property-detail"></article>
+  `;
+
+  // Reuse the existing full property renderer.
+  $("full-property-detail").innerHTML = "";
+  const oldDetail = $("detail");
+  const oldHTML = oldDetail.innerHTML;
+
+  renderDetail(property);
+
+  $("full-property-detail").innerHTML = oldDetail.innerHTML;
+  oldDetail.innerHTML = oldHTML;
+
+  $("full-property-back").addEventListener("click", () => {
+    window.location.href = "/";
+  });
+}
+
 function fmtPhone(p){p=String(p||"");return p.length===10?p.slice(0,5)+" "+p.slice(5):p}
 function contactFields(p){
   return `<div class="fgrid">
@@ -1142,9 +1194,24 @@ try{
   var wantReq=qs.get("req")==="1";
 }catch(e){}
 const h=(location.hash||"").slice(1);
+
+const requestedProperty = new URLSearchParams(
+  window.location.search
+).get("property");
+
 showView({"post-property":"post","admin":"admin"}[h]||"deals");
+
 if(h==="post-requirement"||wantReq)openRequirement();
-refreshProps();loadFooter();
+
+refreshProps().then(() => {
+  if (requestedProperty) {
+    VIEWS.forEach(v => $("v-" + v).hidden = true);
+    renderFullPropertyPage(requestedProperty);
+  }
+});
+
+loadFooter();
+
 api.currentUser().then(u=>{S.user=u;if(u)afterSignIn();else render()});
 if(LIVE)sb.auth.onAuthStateChange((ev,session)=>{const u=session&&session.user;const nu=u?{id:u.id,email:u.email}:null;if((nu&&nu.id)!==(S.user&&S.user.id)){S.user=nu;if(nu)afterSignIn();else{S.isAdmin=false;$("adminBtn").hidden=true;render()}}});
 })();
