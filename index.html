@@ -211,6 +211,28 @@ footer .footlinks{display:grid;grid-template-columns:repeat(auto-fit,minmax(220p
 .footlinks a{color:var(--muted);text-decoration:none}.footlinks a:hover{color:var(--accent);text-decoration:underline}
 .spacer{flex:1 1 0}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:12px 18px;border-radius:12px;font-weight:700;font-size:14px;z-index:50;max-width:calc(100% - 32px);box-shadow:0 6px 24px rgba(0,0,0,.25)}
+
+/* Individual property page — preserve the existing design */
+#v-deals.property-page .filters,
+#v-deals.property-page .listpane {
+  display: none;
+}
+
+#v-deals.property-page .split {
+  display: block;
+}
+
+#v-deals.property-page .detail {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  flex: none;
+  position: static;
+  max-height: none;
+  overflow: visible;
+}
+
 </style>
 </head>
 <body>
@@ -1203,14 +1225,41 @@ showView({"post-property":"post","admin":"admin"}[h]||"deals");
 
 if(h==="post-requirement"||wantReq)openRequirement();
 
+
 refreshProps().then(() => {
-  if (requestedProperty) {
-    VIEWS.forEach(v => $("v-" + v).hidden = true);
-    renderFullPropertyPage(requestedProperty);
+  const pathMatch = location.pathname.match(
+    /^\/property\/([^/]+)\/?$/
+  );
+
+  const slug = window.__PROPERTY_ROUTE_SLUG__ ||
+    (pathMatch ? decodeURIComponent(pathMatch[1]) : null);
+
+  if (!slug) return;
+
+  const property = S.props.find(
+    p => p.slug === slug && isLive(p)
+  );
+
+  if (!property) {
+    $("detail").innerHTML =
+      '<div class="empty">This property could not be found or is no longer available.</div>';
+    return;
   }
+
+  S.cat = property.category;
+  S.deal = property.deal;
+  S.area = "all";
+  S.bhk = [];
+  S.sel = property.id;
+  S.img = 0;
+
+  showView("deals");
+  $("v-deals").classList.add("property-page");
+  renderDeals();
 });
 
 loadFooter();
+
 
 api.currentUser().then(u=>{S.user=u;if(u)afterSignIn();else render()});
 if(LIVE)sb.auth.onAuthStateChange((ev,session)=>{const u=session&&session.user;const nu=u?{id:u.id,email:u.email}:null;if((nu&&nu.id)!==(S.user&&S.user.id)){S.user=nu;if(nu)afterSignIn();else{S.isAdmin=false;$("adminBtn").hidden=true;render()}}});
