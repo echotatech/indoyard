@@ -8,3 +8,19 @@
     { "source": "/sitemap.xml", "destination": "/api/sitemap" }
   ]
 }
+
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/property.js": {
+      "includeFiles": ["index.html"]
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/property/:slug",
+      "destination": "/api/property?slug=:slug"
+    }
+  ]
+}
+
