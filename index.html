@@ -753,6 +753,29 @@ function renderFullPropertyPage(slug) {
   });
 }
 
+function locCard(l){
+  const img=(l.images||[])[0];
+  const inner=`<span class="thumb t-${esc(l.category)}">${img?`<img src="${esc(img)}" alt="" loading="lazy">`:`${ICON_HOME}<span>${esc(bhkLabel(l))}</span>`}</span>
+    <span class="cbody">
+      <span class="ctop"><span class="ctitle">${esc(l.title)}</span><span class="off">${offPct(l)}% OFF</span></span>
+      <span class="cmeta">${esc(l.property_name)} · ${esc(l.landmark||l.locality)}</span>
+      <span class="cmeta num">${esc(bhkLabel(l))} · ${Number(l.carpet_sqft).toLocaleString("en-IN")} sq ft · For ${l.deal==="lease"?"lease":"sale"}</span>
+      <span class="prices num"><b>${amt(l.deal_price)}${per(l.deal)}</b><s>${amt(l.normal_price)}${per(l.deal)}</s></span>
+    </span>`;
+  return l.slug?`<a class="card" href="/property/${encodeURIComponent(l.slug)}">${inner}</a>`:`<div class="card">${inner}</div>`;
+}
+function renderLocality(){
+  const area=S.locArea;if(!area)return;
+  $("loc-h1").textContent="Properties in "+area+", Pune";
+  $("loc-intro").textContent="Discounted residential and commercial properties in "+area+". Tap any property to see its full details, photos and price.";
+  if(S.state==="loading"&&!S.props.length){$("loc-body").innerHTML='<div class="notice">Loading properties…</div>';return}
+  const rows=S.props.filter(l=>isLive(l)&&l.locality===area).sort((a,b)=>offPct(b)-offPct(a));
+  if(!rows.length){
+    $("loc-body").innerHTML=`<div class="empty"><span>No live properties in ${esc(area)} right now.</span><button class="btn" data-act="requirement">Send us your requirement</button></div>`;return}
+  $("loc-body").innerHTML=CATS.map(([id,label])=>{
+    const g=rows.filter(l=>l.category===id);if(!g.length)return "";
+    return `<section class="listpane"><div class="listhead"><span>${esc(label)}</span><span>${g.length} ${g.length===1?"property":"properties"}</span></div><div class="cards">${g.map(locCard).join("")}</div></section>`}).join("");
+}  
 function fmtPhone(p){p=String(p||"");return p.length===10?p.slice(0,5)+" "+p.slice(5):p}
 function contactFields(p){
   return `<div class="fgrid">
