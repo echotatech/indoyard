@@ -456,6 +456,7 @@ const CONFIG = {
 const LIVE=!!(CONFIG.SUPABASE_URL&&CONFIG.SUPABASE_ANON_KEY&&window.supabase);
 const sb=LIVE?window.supabase.createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_ANON_KEY):null;
 const AREAS=CONFIG.LOCALITIES;
+const LOC_SLUGS=Object.fromEntries(AREAS.map(a=>[a.toLowerCase(),a]));
 const CATS=[["residential","Residential"],["commercial","Commercial"],["other","Other properties"]];
 const DEALS=[["sale","Sale"],["lease","Lease"]];
 const AMENITIES=["Covered parking","Lift","Power backup","24×7 security","Gym","Swimming pool","Clubhouse","Garden","Kids play area","Water 24×7","Fire safety","Main road facing"];
