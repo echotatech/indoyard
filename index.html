@@ -1269,7 +1269,10 @@ const requestedProperty = new URLSearchParams(
   window.location.search
 ).get("property");
 
-showView({"post-property":"post","admin":"admin"}[h]||"deals");
+const locMatch=location.pathname.match(/^\/properties-in-([a-z-]+)\/?$/);
+S.locArea=window.__LOCALITY_ROUTE__||(locMatch&&LOC_SLUGS[locMatch[1]])||null;
+
+showView(S.locArea?"locality":({"post-property":"post","admin":"admin"}[h]||"deals"));
 
 if(h==="post-requirement"||wantReq)openRequirement();
 
