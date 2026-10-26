@@ -1141,7 +1141,7 @@ async function loadFooter(){
 }
 
 /* ---------- views & events ---------- */
-const VIEWS=["deals","requirement","post","admin"];
+const VIEWS=["deals","requirement","post","admin","locality"];
 function showView(v){if(!VIEWS.includes(v))v="deals";S.view=v;VIEWS.forEach(x=>$("v-"+x).hidden=x!==v);render();window.scrollTo({top:0})}
 function render(){
   if(S.view==="deals")renderDeals();
