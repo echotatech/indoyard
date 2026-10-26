@@ -1145,6 +1145,7 @@ const VIEWS=["deals","requirement","post","admin","locality"];
 function showView(v){if(!VIEWS.includes(v))v="deals";S.view=v;VIEWS.forEach(x=>$("v-"+x).hidden=x!==v);render();window.scrollTo({top:0})}
 function render(){
   if(S.view==="deals")renderDeals();
+  else if(S.view==="locality")renderLocality();
   else if(S.view==="post"){if(!$("pp-oname").value)$("pp-oname").value=contact.name;if(!$("pp-ophone").value)$("pp-ophone").value=contact.phone;if(!$("pp-oemail").value)$("pp-oemail").value=contact.email}
   else if(S.view==="admin"){refreshVerify();renderAdmin()}
   updateBadge();
