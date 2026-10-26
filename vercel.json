@@ -1,22 +1,17 @@
-
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "buildCommand": "",
   "outputDirectory": ".",
   "functions": {
-    "api/property.js": {
-      "includeFiles": "index.html"
-    }
+    "api/property.js": { "includeFiles": "index.html" },
+    "api/locality.js": { "includeFiles": "index.html" }
   },
   "rewrites": [
-    {
-      "source": "/property/:slug",
-      "destination": "/api/property?slug=:slug"
-    },
-    {
-      "source": "/sitemap.xml",
-      "destination": "/api/sitemap"
-    }
+    { "source": "/property/:slug", "destination": "/api/property?slug=:slug" },
+    { "source": "/properties-in-baner", "destination": "/api/locality?area=baner" },
+    { "source": "/properties-in-hinjewadi", "destination": "/api/locality?area=hinjewadi" },
+    { "source": "/properties-in-wakad", "destination": "/api/locality?area=wakad" },
+    { "source": "/sitemap.xml", "destination": "/api/sitemap" }
   ]
 }
