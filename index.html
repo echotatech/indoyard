@@ -1322,6 +1322,102 @@ $("reqForm").addEventListener("submit",postRequirement);
 function measure(){document.documentElement.style.setProperty("--hh",$("top").offsetHeight+"px")}
 window.addEventListener("resize",measure);
 
+/* ---------- "Submit your requirement" popup (opens 10 seconds after arrival) ---------- */
+const RP_DELAY=10000;            // milliseconds before the popup appears (10000 = 10 seconds)
+const RP_KEY="iy_req_popup";     // remembers that the visitor closed or submitted it
+const RP_SNOOZE_DAYS=3;          // after closing it, don't show again for this many days
+const RP_DONE_DAYS=30;           // after submitting, don't show again for this many days
+let rpTimer=null,rpPrevFocus=null;
+
+function rpDigits(v){let d=String(v||"").replace(/\D/g,"");if(d.length>10&&d.startsWith("91"))d=d.slice(2);return d.slice(0,10)}
+function rpSuppressed(){
+  const s=load(RP_KEY,{}),now=Date.now();
+  return !!((s.done&&now-s.done<RP_DONE_DAYS*864e5)||(s.closed&&now-s.closed<RP_SNOOZE_DAYS*864e5));
+}
+function rpSchedule(ms){
+  clearTimeout(rpTimer);
+  rpTimer=setTimeout(()=>{
+    if(rpSuppressed())return;
+    const a=document.activeElement;
+    const typing=!!a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName);
+    // Wait while the visitor is typing, or is on the post / requirement / admin screens
+    if(typing||(S.view!=="deals"&&S.view!=="locality"))return rpSchedule(5000);
+    rpOpen();
+  },ms);
+}
+function rpOpen(){
+  const box=$("rp");if(!box||!box.hidden)return;
+  $("rp-form").hidden=false;$("rp-thanks").hidden=true;$("rp-err").textContent="";
+  if(!$("rp-name").value)$("rp-name").value=contact.name||"";
+  if(!$("rp-phone").value)$("rp-phone").value=contact.phone||"";
+  if(!$("rp-email").value)$("rp-email").value=contact.email||"";
+  rpPrevFocus=document.activeElement;
+  box.hidden=false;document.body.style.overflow="hidden";
+  box.querySelector(".rp-card").focus();
+}
+function rpClose(remember){
+  const box=$("rp");if(!box||box.hidden)return;
+  box.hidden=true;document.body.style.overflow="";
+  if(remember!==false){const s=load(RP_KEY,{});s.closed=Date.now();save(RP_KEY,s)}
+  if(rpPrevFocus&&rpPrevFocus.focus){try{rpPrevFocus.focus()}catch(e){}}
+}
+async function rpSubmit(e){
+  e.preventDefault();
+  const err=$("rp-err");err.textContent="";
+  const v=id=>$(id).value.trim();
+  const d={name:v("rp-name"),phone:rpDigits(v("rp-phone")),email:v("rp-email"),requirement:v("rp-need"),website:v("rp-hp"),page:location.href};
+  if(d.name.length<2)return err.textContent="Enter your full name.";
+  if(!validPhone(d.phone))return err.textContent="Enter a 10-digit Indian mobile number starting with 6, 7, 8 or 9.";
+  if(!validEmail(d.email))return err.textContent="Enter a valid email address.";
+  if(d.requirement.length<10)return err.textContent="Describe what you need in a few words (at least 10 characters).";
+  const btn=$("rp-submit");btn.disabled=true;btn.textContent="Sending…";
+  try{
+    if(!d.website){   // the hidden "website" field is for bots: if filled, pretend success and send nothing
+      // Same row format as the normal "Post requirement" form, so it shows up in Admin → Requirements.
+      // The "[Website popup]" label at the start of notes is how the admin list recognises these.
+      const row={category:"other",deal:"sale",locality:"Any",bhk:[],budget:"Not specified",area_sqft:"Not specified",furnishing:"Any",
+        notes:"[Website popup] "+d.requirement,name:d.name,phone:d.phone,email:d.email};
+      // Save to the database AND send the email at the same time
+      const [saved,mailed]=await Promise.allSettled([
+        api.sendRequirement(row),
+        fetch("/api/requirement",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(d)})
+          .then(r=>{if(!r.ok)throw new Error("email failed: "+r.status)})
+      ]);
+      if(saved.status!=="fulfilled"&&mailed.status!=="fulfilled")throw new Error("send failed");  // only an error if BOTH failed
+      if(saved.status!=="fulfilled")console.warn("Popup requirement was emailed but not saved to the database:",saved.reason);
+      if(mailed.status!=="fulfilled")console.warn("Popup requirement was saved but the email failed:",mailed.reason);
+    }
+    contact={name:d.name,phone:d.phone,email:d.email};save("iy_contact",contact);
+    const s=load(RP_KEY,{});s.done=Date.now();save(RP_KEY,s);
+    $("rp-thanks-msg").textContent="Your requirement has been sent. The Indoyards team will contact you on +91 "+fmtPhone(d.phone)+" with matching discounted properties.";
+    $("rp-need").value="";$("rp-form").hidden=true;$("rp-thanks").hidden=false;
+    $("rp-done-btn").focus();
+    if(S.isAdmin)loadAdmin().then(render);   // if the admin is signed in, refresh the Requirements tab
+    setTimeout(()=>rpClose(false),8000);
+  }catch(x){
+    err.textContent="Couldn't send right now. Please try again, or call / WhatsApp +91 "+fmtPhone(CONFIG.CONTACT_PHONE)+".";
+  }finally{btn.disabled=false;btn.textContent="Send my requirement"}
+}
+function rpInit(){
+  const box=$("rp");if(!box)return;
+  $("rp-form").addEventListener("submit",rpSubmit);
+  $("rp-close").addEventListener("click",()=>rpClose());
+  $("rp-later").addEventListener("click",()=>rpClose());
+  $("rp-done-btn").addEventListener("click",()=>rpClose(false));
+  $("rp-phone").addEventListener("input",e=>{e.target.value=rpDigits(e.target.value)});
+  box.addEventListener("click",e=>{if(e.target===box)rpClose()});
+  document.addEventListener("keydown",e=>{
+    if(box.hidden)return;
+    if(e.key==="Escape"){rpClose();return}
+    if(e.key!=="Tab")return;
+    const f=[...box.querySelectorAll("button,input,textarea,a[href]")].filter(x=>!x.closest("[hidden]")&&!x.disabled&&x.tabIndex>=0);
+    if(!f.length)return;
+    const first=f[0],last=f[f.length-1];
+    if(e.shiftKey&&(document.activeElement===first||document.activeElement===box.querySelector(".rp-card"))){e.preventDefault();last.focus()}
+    else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}
+  });
+  if(!rpSuppressed())rpSchedule(RP_DELAY);
+}
 /* ---------- start ---------- */
 $("tagline").textContent=CONFIG.TAGLINE;
 $("phoneText").textContent="+91 "+fmtPhone(CONFIG.CONTACT_PHONE);
