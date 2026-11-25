@@ -896,8 +896,24 @@ async function postRequirement(e){
     budget:labelOf(BUDGETS[r.deal],$("rq-budget").value),area_sqft:labelOf(SQFT,$("rq-sqft").value),furnishing:$("rq-furnish").value==="any"?"Any":$("rq-furnish").value,
     notes:$("rq-notes").value.trim(),name:c.name,phone:c.phone,email:c.email};
   const b=$("rq-submit");b.disabled=true;
-  try{await api.sendRequirement(row);$("rq-notes").value="";showView("deals");toast("Requirement sent. We'll share matching properties soon.")}
-  catch(x){err.textContent="Couldn't send right now. Check your connection and try again."}
+  try{
+  const need=[
+    reqSummary(row),
+    "Budget: "+row.budget,
+    "Area: "+row.area_sqft,
+    "Furnishing: "+row.furnishing,
+    row.notes?("Notes: "+row.notes):""
+  ].filter(Boolean).join("\n");
+  const [saved,mailed]=await Promise.allSettled([
+    api.sendRequirement(row),
+    fetch("/api/requirement",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({name:c.name,phone:c.phone,email:c.email,requirement:need,website:"",page:location.href})})
+      .then(r=>{if(!r.ok)throw new Error("email failed: "+r.status)})
+  ]);
+  if(saved.status!=="fulfilled"&&mailed.status!=="fulfilled")throw new Error("send failed");
+  $("rq-notes").value="";showView("deals");toast("Requirement sent. We'll share matching properties soon.")
+}
+catch(x){err.textContent="Couldn't send right now. Check your connection and try again."}
   finally{b.disabled=false}
 }
 function reqSummary(r){
