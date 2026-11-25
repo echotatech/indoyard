@@ -472,7 +472,44 @@ footer .footlinks{display:grid;grid-template-columns:repeat(auto-fit,minmax(220p
   </div>
 </nav>
   <nav class="wrap footlinks" id="footLinks" aria-label="Popular searches" hidden></nav><div class="wrap"><span>© Indoyards · Properties at discount</span><span class="num">Call / WhatsApp +91 81800 53763 · <button class="linkbtn" data-act="admin">Admin login</button></span></div></footer>
-<div class="toast" id="toast" role="status" hidden></div>
+<!-- "Submit your requirement" popup -->
+<div class="rp-overlay" id="rp" hidden>
+  <div class="rp-card" role="dialog" aria-modal="true" aria-labelledby="rp-title" aria-describedby="rp-sub" tabindex="-1">
+    <div class="rp-top">
+      <button type="button" class="rp-x" id="rp-close" aria-label="Close">
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+      <span class="rp-pill">Mehenga Ghar, Saste Daam!</span>
+      <h2 id="rp-title">Submit your requirement</h2>
+      <p id="rp-sub">Tell us what you're looking for in Baner, Wakad or Hinjewadi. The Indoyards team will find discounted matches and call you.</p>
+    </div>
+
+    <form class="rp-body" id="rp-form" novalidate>
+      <label class="field"><span>Full name</span><input id="rp-name" autocomplete="name" maxlength="80" placeholder="e.g. Rahul Sharma"></label>
+      <label class="field"><span>Mobile number</span>
+        <span class="phone"><span>+91</span><input id="rp-phone" inputmode="numeric" maxlength="14" autocomplete="tel-national" placeholder="10-digit mobile number" aria-label="10-digit mobile number"></span></label>
+      <label class="field"><span>Email</span><input id="rp-email" type="email" autocomplete="email" maxlength="120" placeholder="you@example.com"></label>
+      <label class="field"><span>Your exact requirement</span>
+        <textarea id="rp-need" maxlength="1000" placeholder="e.g. 2 BHK flat for rent in Wakad, budget up to ₹25,000/month, semi-furnished, needed by 1 December"></textarea></label>
+      <input class="rp-hp" id="rp-hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <p class="err" id="rp-err" role="alert"></p>
+      <button class="btn deal rp-submit" type="submit" id="rp-submit">Send my requirement</button>
+      <button type="button" class="linkbtn rp-later" id="rp-later">Maybe later</button>
+      <div class="privacy">
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+        <span>Free to submit. Only the Indoyards team sees your details.</span>
+      </div>
+    </form>
+
+    <div class="rp-body rp-ok" id="rp-thanks" hidden>
+      <span class="rp-tick"><svg aria-hidden="true" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>
+      <h3>Thank you!</h3>
+      <p id="rp-thanks-msg" role="status"></p>
+      <button type="button" class="btn" id="rp-done-btn">Browse properties</button>
+    </div>
+  </div>
+</div>
+  <div class="toast" id="toast" role="status" hidden></div>
 
 <script>
 /* =====================================================================
