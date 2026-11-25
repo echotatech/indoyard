@@ -1483,7 +1483,7 @@ refreshProps().then(() => {
 });
 
 loadFooter();
-
+rpInit();
 
 api.currentUser().then(u=>{S.user=u;if(u)afterSignIn();else render()});
 if(LIVE)sb.auth.onAuthStateChange((ev,session)=>{const u=session&&session.user;const nu=u?{id:u.id,email:u.email}:null;if((nu&&nu.id)!==(S.user&&S.user.id)){S.user=nu;if(nu)afterSignIn();else{S.isAdmin=false;$("adminBtn").hidden=true;render()}}});
