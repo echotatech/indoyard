@@ -239,6 +239,43 @@ footer .footlinks{display:grid;grid-template-columns:repeat(auto-fit,minmax(220p
 #loc-body .listpane{max-width:none;flex:none;width:100%}
 #loc-body .listpane .cards{max-height:none;overflow:visible}
 .cards a.card{text-decoration:none;color:inherit}
+/* ===== "Submit your requirement" popup ===== */
+.rp-overlay{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;
+  padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
+  background:rgba(10,20,17,.58);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);animation:rp-fade .25s ease-out}
+.rp-card{position:relative;width:100%;max-width:480px;max-height:100%;overflow:auto;background:var(--surface);color:var(--fg);
+  border-radius:20px;box-shadow:0 24px 60px rgba(0,0,0,.35);animation:rp-pop .32s cubic-bezier(.2,.8,.2,1);outline:none}
+.rp-top{position:relative;overflow:hidden;background:var(--accent);color:var(--accent-ink);padding:24px 24px 22px}
+.rp-top::before{content:"";position:absolute;right:-36px;top:-36px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.12)}
+.rp-top::after{content:"";position:absolute;right:48px;bottom:-54px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.08)}
+.rp-top > *{position:relative;z-index:1}
+.rp-pill{display:inline-flex;background:var(--sun);color:var(--sun-ink);font-family:var(--display);font-weight:800;font-size:13px;
+  padding:5px 12px;border-radius:999px;transform:rotate(-1.5deg);margin-bottom:12px}
+.rp-top h2{font-size:clamp(23px,5.4vw,28px);font-weight:800;line-height:1.15;padding-right:34px}
+.rp-top p{margin:8px 0 0;font-size:14px;line-height:1.5;opacity:.93;max-width:38ch}
+.rp-x{position:absolute!important;top:12px;right:12px;width:36px;height:36px;border-radius:50%;border:0;cursor:pointer;
+  display:grid;place-items:center;background:rgba(255,255,255,.2);color:var(--accent-ink)}
+.rp-x:hover{background:rgba(255,255,255,.34)}
+.rp-x:focus-visible{outline:3px solid var(--accent-ink);outline-offset:2px}
+.rp-body{padding:20px 24px 22px;display:flex;flex-direction:column;gap:14px}
+.rp-body .field textarea{min-height:92px}
+.rp-hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0;overflow:hidden}
+.rp-submit{width:100%;min-height:48px;font-size:16px}
+.rp-later{align-self:center;color:var(--muted);font-weight:600;font-size:14px}
+.rp-ok{align-items:center;text-align:center;padding:34px 24px 30px;gap:12px}
+.rp-ok .rp-tick{width:60px;height:60px;border-radius:50%;background:var(--ok-soft);color:var(--ok);display:grid;place-items:center}
+.rp-ok h3{font-size:22px;font-weight:800}
+.rp-ok p{margin:0;color:var(--muted);max-width:36ch}
+@keyframes rp-fade{from{opacity:0}to{opacity:1}}
+@keyframes rp-pop{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes rp-rise{from{transform:translateY(100%)}to{transform:none}}
+@media (max-width:560px){
+  .rp-overlay{align-items:flex-end;padding:0}
+  .rp-card{max-width:none;max-height:92vh;border-radius:20px 20px 0 0;padding-bottom:env(safe-area-inset-bottom,0px);animation:rp-rise .3s cubic-bezier(.2,.8,.2,1)}
+  .rp-top{padding:22px 20px 20px}
+  .rp-body{padding:18px 20px 20px}
+}
+@media (prefers-reduced-motion: reduce){.rp-overlay,.rp-card{animation:none!important}}
 </style>
 </head>
 <body>
